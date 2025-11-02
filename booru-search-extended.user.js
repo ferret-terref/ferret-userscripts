@@ -3,6 +3,9 @@
 // @version      1.0
 // @description  Advanced tag builder with tree-based UI and robust parsing - works on multiple booru sites
 // @author       ferret-terref
+// @homepageURL  https://github.com/ferret-terref/booru-search-extended
+// @updateURL    https://github.com/ferret-terref/booru-search-extended/raw/refs/heads/main/booru-search-extended.user.js
+// @downloadURL  https://github.com/ferret-terref/booru-search-extended/raw/refs/heads/main/booru-search-extended.user.js
 // @license      MIT
 // @match        https://rule34.xxx/index.php?page=post&s=list*
 // @match        https://gelbooru.com/index.php?page=post&s=list*

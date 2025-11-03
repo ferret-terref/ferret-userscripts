@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Booru Search Extended
-// @version      1.2
+// @version      1.3
 // @description  Advanced tag builder with tree-based UI and robust parsing - works on multiple booru sites
 // @author       ferret-terref
 // @homepageURL  https://github.com/ferret-terref/booru-search-extended
@@ -271,6 +271,10 @@
         .tqb-modal-title { font-size: var(--tqb-font-lg); font-weight: 600; color: var(--tqb-accent-amber); margin: 0; background: transparent; }
         .tqb-modal-close { background: var(--tqb-text-tertiary); color: white; border: none; border-radius: var(--tqb-radius-sm); padding: var(--tqb-spacing-sm); cursor: pointer; font-size: var(--tqb-font-lg); width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; }
         .tqb-modal-close:hover { background: var(--tqb-bg-hover); }
+        /* Help modal */
+        .tqb-shortcut-item { display: flex; justify-content: space-between; align-items: center; padding: var(--tqb-spacing-md); margin-bottom: var(--tqb-spacing-sm); background: var(--tqb-bg-secondary); border-radius: var(--tqb-radius-sm); }
+        .tqb-shortcut-item strong { color: var(--tqb-accent-blue); font-family: monospace; min-width: 140px; }
+        .tqb-shortcut-item span { color: var(--tqb-text-secondary); flex: 1; }
     `;
   }
 
@@ -306,6 +310,7 @@
             <button id="tqb-paste-to" class="tqb-sync-btn" aria-label="Paste tags to page input">📤 Paste to input</button>
             <button id="tqb-save-favorite" class="tqb-sync-btn tqb-save-btn" aria-label="Save current tags as favorite">💾 Save Current</button>
             <button id="tqb-clear-all" class="tqb-clear-btn" aria-label="Clear all tags">🗑️ Clear All</button>
+            <button id="tqb-preferences" class="tqb-sync-btn" aria-label="Open preferences" style="background: var(--tqb-text-tertiary); grid-column: 1 / -1;">⚙️ Preferences</button>
         </div>
 
         <!-- Input row -->
@@ -378,6 +383,38 @@
     `;
     document.body.appendChild(modalOverlay);
 
+    // Create help modal
+    const helpModalOverlay = document.createElement('div');
+    helpModalOverlay.className = 'tqb-modal-overlay';
+    helpModalOverlay.setAttribute('role', 'dialog');
+    helpModalOverlay.setAttribute('aria-modal', 'true');
+    helpModalOverlay.setAttribute('aria-labelledby', 'tqb-help-modal-title');
+    helpModalOverlay.innerHTML = `
+        <div class="tqb-modal" id="tqb-help-modal" style="max-width: 500px;">
+            <div class="tqb-modal-header">
+                <h3 class="tqb-modal-title" id="tqb-help-modal-title">⚙️ Preferences</h3>
+                <button class="tqb-modal-close" id="tqb-help-modal-close" aria-label="Close preferences modal">✕</button>
+            </div>
+            <div class="tqb-help-content" style="padding: 1rem;">
+                <h4 style="color: var(--tqb-accent-blue); margin-top: 0; margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md);">⌨️ Keyboard Shortcuts</h4>
+                <div class="tqb-shortcut-item">
+                    <strong>Ctrl + Enter</strong>
+                    <span>Paste tags to page search input</span>
+                </div>
+                <div class="tqb-shortcut-item">
+                    <strong>Ctrl + S</strong>
+                    <span>Save current tags as favorite</span>
+                </div>
+                <div class="tqb-shortcut-item">
+                    <strong>Ctrl + Shift + X</strong>
+                    <span>Copy tags from page search input to builder</span>
+                </div>
+            </div>
+        </div>
+    `;
+    helpModalOverlay.style.display = 'none';
+    document.body.appendChild(helpModalOverlay);
+
     const input = builder.querySelector('#tqb-input');
     const opSelect = builder.querySelector('#tqb-op');
     const addBtn = builder.querySelector('#tqb-add');
@@ -387,6 +424,7 @@
     const pasteToBtn = builder.querySelector('#tqb-paste-to');
     const viewFavoritesBtn = builder.querySelector('#tqb-view-favorites');
     const clearAllBtn = builder.querySelector('#tqb-clear-all');
+    const preferencesBtn = builder.querySelector('#tqb-preferences');
     const saveFavoriteBtn = builder.querySelector('#tqb-save-favorite');
     const favoritesFilter = builder.querySelector('#tqb-favorites-filter');
     const favoritesList = builder.querySelector('#tqb-favorites-list');
@@ -1044,6 +1082,49 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && modalOverlay.style.display === 'flex') {
         modalOverlay.style.display = 'none';
+      }
+      if (e.key === 'Escape' && helpModalOverlay.style.display === 'flex') {
+        helpModalOverlay.style.display = 'none';
+      }
+    });
+
+    // --- Help Modal ---
+    preferencesBtn.addEventListener('click', () => {
+      helpModalOverlay.style.display = 'flex';
+    });
+
+    const helpModalClose = helpModalOverlay.querySelector('#tqb-help-modal-close');
+    helpModalClose.addEventListener('click', () => {
+      helpModalOverlay.style.display = 'none';
+    });
+
+    helpModalOverlay.addEventListener('click', (e) => {
+      if (e.target === helpModalOverlay) {
+        helpModalOverlay.style.display = 'none';
+      }
+    });
+
+    // --- Keyboard Shortcuts ---
+    document.addEventListener('keydown', (e) => {
+      // Ctrl+Enter - Paste tags to page input
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        pasteToBtn.click();
+        return;
+      }
+
+      // Ctrl+S - Save current tags as favorite
+      if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        saveFavoriteBtn.click();
+        return;
+      }
+
+      // Ctrl+Shift+X - Copy tags from page input to builder
+      if (e.ctrlKey && e.shiftKey && (e.key === 'x' || e.key === 'X')) {
+        e.preventDefault();
+        copyFromBtn.click();
+        return;
       }
     });
 

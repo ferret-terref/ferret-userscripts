@@ -25,6 +25,7 @@
   const THEME_KEY = 'tqb-theme';
   const COMPACT_KEY = 'tqb-compact';
   const AUTO_SUBMIT_KEY = 'tqb-auto-submit';
+  const SHOW_PREVIEW_KEY = 'tqb-show-preview';
 
   // Site configuration for different booru sites
   const SITE_CONFIGS = {
@@ -326,6 +327,12 @@
         #tqb-auto-submit-toggle:checked + span + span {
           transform: translateX(20px);
         }
+        #tqb-show-preview-toggle:checked + span {
+          background-color: var(--tqb-accent-blue);
+        }
+        #tqb-show-preview-toggle:checked + span + span {
+          transform: translateX(20px);
+        }
         /* Modal */
         .tqb-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: none; justify-content: center; align-items: center; }
         .tqb-modal { background: var(--tqb-bg-primary); color: var(--tqb-text-primary); border-radius: var(--tqb-radius-lg); padding: var(--tqb-spacing-lg); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
@@ -368,6 +375,31 @@
 
   // Inject site-specific CSS for wider sidebars
   injectSiteCSS(siteConfig);
+
+  /**
+   * Generate HTML for a settings toggle option
+   * @param {string} label - Display label for the setting (e.g., "🎨 Theme")
+   * @param {string} id - ID for the checkbox input
+   * @param {string} leftLabel - Label for unchecked state (e.g., "Dark")
+   * @param {string} rightLabel - Label for checked state (e.g., "Light")
+   * @returns {string} HTML string for the setting row
+   */
+  function generateSettingToggle(label, id, leftLabel, rightLabel) {
+    return `
+      <div class="tqb-shortcut-item">
+        <span style="color: var(--tqb-text-primary); min-width: 200px;">${label}</span>
+        <div style="display:flex;align-items:center;gap:var(--tqb-spacing-md); min-width: 200px;">
+          <span style="color:var(--tqb-text-secondary);font-size:var(--tqb-font-sm);">${leftLabel}</span>
+          <label style="display:inline-flex;align-items:center;cursor:pointer;position:relative;width:40px;height:20px;">
+            <input type="checkbox" id="${id}" style="opacity:0;width:0;height:0;">
+            <span style="position:absolute;top:0;left:0;right:0;bottom:0;background-color:var(--tqb-bg-tertiary);border-radius:20px;transition:0.3s;"></span>
+            <span style="position:absolute;height:14px;width:14px;left:3px;bottom:3px;background-color:white;border-radius:50%;transition:0.3s;"></span>
+          </label>
+          <span style="color:var(--tqb-text-secondary);font-size:var(--tqb-font-sm);">${rightLabel}</span>
+        </div>
+      </div>
+    `;
+  }
 
   waitForElements([siteConfig.containerSelector, siteConfig.inputSelector], (container, inputEl) => {
     console.log(`Tag Builder: Found container and input elements`);
@@ -487,37 +519,12 @@
                 <button class="tqb-modal-close" id="tqb-help-modal-close" aria-label="Close preferences modal">✕</button>
             </div>
             <div class="tqb-help-content" style="padding: 1rem;">
-                <h4 style="color: var(--tqb-accent-blue); margin-top: 0; margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md);">🎨 Theme</h4>
-                <div style="display:flex;align-items:center;gap:var(--tqb-spacing-md);margin-bottom:var(--tqb-spacing-lg);">
-                    <span style="color:var(--tqb-text-secondary);font-size:var(--tqb-font-md);">Dark</span>
-                    <label style="display:inline-flex;align-items:center;cursor:pointer;position:relative;width:40px;height:20px;">
-                        <input type="checkbox" id="tqb-theme-toggle" style="opacity:0;width:0;height:0;">
-                        <span style="position:absolute;top:0;left:0;right:0;bottom:0;background-color:var(--tqb-bg-tertiary);border-radius:20px;transition:0.3s;"></span>
-                        <span style="position:absolute;height:14px;width:14px;left:3px;bottom:3px;background-color:white;border-radius:50%;transition:0.3s;"></span>
-                    </label>
-                    <span style="color:var(--tqb-text-secondary);font-size:var(--tqb-font-md);">Light</span>
-                </div>
-                <h4 style="color: var(--tqb-accent-blue); margin-top: 0; margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md);">📐 Spacing</h4>
-                <div style="display:flex;align-items:center;gap:var(--tqb-spacing-md);margin-bottom:var(--tqb-spacing-lg);">
-                    <span style="color:var(--tqb-text-secondary);font-size:var(--tqb-font-md);">Regular</span>
-                    <label style="display:inline-flex;align-items:center;cursor:pointer;position:relative;width:40px;height:20px;">
-                        <input type="checkbox" id="tqb-compact-toggle" style="opacity:0;width:0;height:0;">
-                        <span style="position:absolute;top:0;left:0;right:0;bottom:0;background-color:var(--tqb-bg-tertiary);border-radius:20px;transition:0.3s;"></span>
-                        <span style="position:absolute;height:14px;width:14px;left:3px;bottom:3px;background-color:white;border-radius:50%;transition:0.3s;"></span>
-                    </label>
-                    <span style="color:var(--tqb-text-secondary);font-size:var(--tqb-font-md);">Compact</span>
-                </div>
-                <h4 style="color: var(--tqb-accent-blue); margin-top: 0; margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md);">🚀 Auto-Submit</h4>
-                <div style="display:flex;align-items:center;gap:var(--tqb-spacing-md);margin-bottom:var(--tqb-spacing-lg);">
-                    <span style="color:var(--tqb-text-secondary);font-size:var(--tqb-font-md);">Off</span>
-                    <label style="display:inline-flex;align-items:center;cursor:pointer;position:relative;width:40px;height:20px;">
-                        <input type="checkbox" id="tqb-auto-submit-toggle" style="opacity:0;width:0;height:0;">
-                        <span style="position:absolute;top:0;left:0;right:0;bottom:0;background-color:var(--tqb-bg-tertiary);border-radius:20px;transition:0.3s;"></span>
-                        <span style="position:absolute;height:14px;width:14px;left:3px;bottom:3px;background-color:white;border-radius:50%;transition:0.3s;"></span>
-                    </label>
-                    <span style="color:var(--tqb-text-secondary);font-size:var(--tqb-font-md);">On</span>
-                </div>
-                <h4 style="color: var(--tqb-accent-blue); margin-top: 0; margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md);">⌨️ Keyboard Shortcuts</h4>
+                <h4 style="color: var(--tqb-accent-blue); margin-top: 0; margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md);">⚙️ Settings</h4>
+                ${generateSettingToggle('🎨 Theme', 'tqb-theme-toggle', 'Dark', 'Light')}
+                ${generateSettingToggle('📐 Spacing', 'tqb-compact-toggle', 'Regular', 'Compact')}
+                ${generateSettingToggle('🚀 Auto-Submit', 'tqb-auto-submit-toggle', 'Off', 'On')}
+                ${generateSettingToggle('👁️ Show Preview', 'tqb-show-preview-toggle', 'Hidden', 'Visible')}
+                <h4 style="color: var(--tqb-accent-blue); margin-top: var(--tqb-spacing-lg); margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md);">⌨️ Keyboard Shortcuts</h4>
                 <div class="tqb-shortcut-item">
                     <strong>Ctrl + Enter</strong>
                     <span>Paste tags to page search input</span>
@@ -541,6 +548,7 @@
     const addBtn = builder.querySelector('#tqb-add');
     const treeArea = builder.querySelector('#tqb-tree');
     const preview = builder.querySelector('#tqb-preview');
+    const previewSection = builder.querySelector('.tqb-preview-section');
     const copyFromBtn = builder.querySelector('#tqb-copy-from');
     const pasteToBtn = builder.querySelector('#tqb-paste-to');
     const viewFavoritesBtn = builder.querySelector('#tqb-view-favorites');
@@ -715,6 +723,7 @@
     const siteThemeKey = getSiteStorageKey(THEME_KEY);
     const siteCompactKey = getSiteStorageKey(COMPACT_KEY);
     const siteAutoSubmitKey = getSiteStorageKey(AUTO_SUBMIT_KEY);
+    const siteShowPreviewKey = getSiteStorageKey(SHOW_PREVIEW_KEY);
 
     /**
      * Apply theme by setting data attribute on document
@@ -789,6 +798,35 @@
      */
     function saveAutoSubmit(autoSubmit) {
       localStorage.setItem(siteAutoSubmitKey, autoSubmit.toString());
+    }
+
+    /**
+     * Load show preview preference from storage
+     * @returns {boolean} true if preview should be shown
+     */
+    function loadShowPreview() {
+      const stored = localStorage.getItem(siteShowPreviewKey);
+      return stored === 'true'; // Default to false (hidden)
+    }
+
+    /**
+     * Save show preview preference to storage
+     * @param {boolean} showPreview - true to show preview, false to hide
+     */
+    function saveShowPreview(showPreview) {
+      localStorage.setItem(siteShowPreviewKey, showPreview.toString());
+    }
+
+    /**
+     * Apply preview visibility
+     * @param {boolean} show - true to show preview, false to hide
+     */
+    function applyPreviewVisibility(show) {
+      if (show) {
+        previewSection.style.display = 'block';
+      } else {
+        previewSection.style.display = 'none';
+      }
     }
 
     /**
@@ -1624,6 +1662,10 @@
       const autoSubmitToggle = helpModalOverlay.querySelector('#tqb-auto-submit-toggle');
       const currentAutoSubmit = loadAutoSubmit();
       autoSubmitToggle.checked = currentAutoSubmit;
+      // Update show preview toggle state
+      const showPreviewToggle = helpModalOverlay.querySelector('#tqb-show-preview-toggle');
+      const currentShowPreview = loadShowPreview();
+      showPreviewToggle.checked = currentShowPreview;
     });
 
     const helpModalClose = helpModalOverlay.querySelector('#tqb-help-modal-close');
@@ -1658,6 +1700,14 @@
     autoSubmitToggle.addEventListener('change', (e) => {
       const autoSubmit = e.target.checked;
       saveAutoSubmit(autoSubmit);
+    });
+
+    // --- Show Preview Toggle ---
+    const showPreviewToggle = helpModalOverlay.querySelector('#tqb-show-preview-toggle');
+    showPreviewToggle.addEventListener('change', (e) => {
+      const showPreview = e.target.checked;
+      saveShowPreview(showPreview);
+      applyPreviewVisibility(showPreview);
     });
 
     // --- Keyboard Shortcuts ---
@@ -1907,6 +1957,10 @@
     const initialCompact = loadCompact();
     applyCompact(initialCompact);
 
+    // Load and apply preview visibility
+    const initialShowPreview = loadShowPreview();
+    applyPreviewVisibility(initialShowPreview);
+
     // Load and render favorites
     loadFavorites();
     renderAllFavorites();
@@ -1919,6 +1973,7 @@
     });
 
     // Watch for autocomplete dropdown and blur input when it appears
+    // TODO: This doesn't really work, need to find a better way
     const autocompleteContainer = siteConfig.autocompleteContainer ? inputEl.closest(siteConfig.autocompleteContainer) : null;
     if (autocompleteContainer) {
       const autocompleteObserver = new MutationObserver((mutations) => {

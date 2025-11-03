@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Booru Search Extended
-// @version      1.3
+// @version      1.1
 // @description  Advanced tag builder with tree-based UI and robust parsing - works on multiple booru sites
 // @author       ferret-terref
 // @homepageURL  https://github.com/ferret-terref/booru-search-extended
@@ -9,7 +9,7 @@
 // @license      MIT
 // @match        https://rule34.xxx/index.php?page=post&s=list*
 // @match        https://gelbooru.com/index.php?page=post&s=list*
-// @match        https://danbooru.donmai.us/posts*
+// @match        https://danbooru.donmai.us/posts?*
 // @match        https://danbooru.donmai.us
 // @match        https://safebooru.org/index.php?page=post&s=list*
 // @match        https://tbib.org/index.php?page=post&s=list*
@@ -114,7 +114,10 @@
     }
   };
 
-  // Get current site configuration
+  /**
+   * Get configuration for the current booru site
+   * @returns {Object|null} Site configuration object or null if unsupported
+   */
   function getCurrentSiteConfig() {
     const hostname = window.location.hostname;
     const config = SITE_CONFIGS[hostname];
@@ -130,14 +133,21 @@
     };
   }
 
-  // Make storage keys site-specific
+  /**
+   * Create site-specific storage key by appending hostname
+   * @param {string} baseKey - Base storage key
+   * @returns {string} Site-specific storage key
+   */
   function getSiteStorageKey(baseKey) {
     const config = getCurrentSiteConfig();
     if (!config) return baseKey;
     return `${baseKey}-${config.hostname}`;
   }
 
-  // Inject site-specific CSS for wider sidebars
+  /**
+   * Inject CSS to widen sidebar for better tag builder display
+   * @param {Object} config - Site configuration object
+   */
   function injectSiteCSS(config) {
     if (!config.sidebarCSS) return;
 
@@ -149,6 +159,11 @@
     console.log(`Tag Builder: Injected sidebar CSS for ${config.name}`);
   }
 
+  /**
+   * Wait for multiple DOM elements to exist before executing callback
+   * @param {string[]} selectors - Array of CSS selectors
+   * @param {Function} callback - Function to call with found elements
+   */
   const waitForElements = (selectors, callback) => {
     const found = selectors.map(s => document.querySelector(s));
     if (found.every(Boolean)) return callback(...found);
@@ -576,10 +591,16 @@
       localStorage.setItem(siteCompactKey, compact.toString());
     }
 
+    /**
+     * Save current tags to localStorage
+     */
     function saveStorage() {
       localStorage.setItem(siteStorageKey, JSON.stringify(tags));
     }
 
+    /**
+     * Load tags from localStorage or initialize from page input
+     */
     function loadStorage() {
       const stored = localStorage.getItem(siteStorageKey);
       if (stored) {
@@ -597,6 +618,9 @@
     // --- Favorites Storage ---
     let favorites = [];
 
+    /**
+     * Load favorites from localStorage
+     */
     function loadFavorites() {
       const stored = localStorage.getItem(siteFavoritesKey);
       if (stored) {
@@ -609,10 +633,18 @@
       }
     }
 
+    /**
+     * Save favorites to localStorage
+     */
     function saveFavorites() {
       localStorage.setItem(siteFavoritesKey, JSON.stringify(favorites));
     }
 
+    /**
+     * Add a new favorite to the collection
+     * @param {string} name - Display name for the favorite
+     * @param {Array} tagData - Tag structure to save
+     */
     function addFavorite(name, tagData) {
       const favorite = {
         id: Date.now(),
@@ -626,18 +658,31 @@
       renderAllFavorites();
     }
 
+    /**
+     * Delete a favorite by ID
+     * @param {number} id - Favorite ID to delete
+     */
     function deleteFavorite(id) {
       favorites = favorites.filter(fav => fav.id !== id);
       saveFavorites();
       renderAllFavorites();
     }
 
+    /**
+     * Load a favorite's tags into the builder
+     * @param {Object} favorite - Favorite object with tags property
+     */
     function loadFavorite(favorite) {
       tags = JSON.parse(JSON.stringify(favorite.tags)); // Deep clone
       saveStorage();
       render();
     }
 
+    /**
+     * Render favorites list with optional filtering
+     * @param {HTMLElement} targetList - Container element for favorites
+     * @param {HTMLInputElement} targetFilter - Filter input element
+     */
     function renderFavorites(targetList = favoritesList, targetFilter = favoritesFilter) {
       const filterText = targetFilter.value.toLowerCase();
       const filteredFavorites = favorites.filter(fav =>
@@ -697,6 +742,9 @@
       });
     }
 
+    /**
+     * Render all favorites in both modal and sidebar
+     */
     function renderAllFavorites() {
       renderFavorites(favoritesList, favoritesFilter);
       renderFavorites(modalFavoritesList, modalFavoritesFilter);
@@ -707,13 +755,22 @@
       renderFavorites(targetList, targetFilter);
     }, 150);
 
+    /**
+     * Escape HTML special characters to prevent XSS
+     * @param {string} text - Text to escape
+     * @returns {string} Escaped text
+     */
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
     }
 
-    // --- Build recursively ---
+    /**
+     * Build query string for a single tag item (recursive)
+     * @param {Object} item - Tag item object
+     * @returns {string} Query string representation
+     */
     function buildQueryItem(item) {
       if (item.op === 'or') {
         // Ensure items is an array before mapping
@@ -729,6 +786,10 @@
       return item.tagValue;
     }
 
+    /**
+     * Build complete query string from all tags
+     * @returns {string} Complete query string
+     */
     function buildQuery() {
       // Ensure tags is always an array
       if (!Array.isArray(tags)) {
@@ -739,7 +800,9 @@
       return tags.map(buildQueryItem).join(' ').trim();
     }
 
-    // --- Render tree structure ---
+    /**
+     * Render the tag tree and preview
+     */
     function render() {
       // Update preview
       const query = buildQuery();
@@ -763,6 +826,12 @@
       addDragHandlers();
     }
 
+    /**
+     * Render a single tree item (tag or OR group)
+     * @param {Object} item - Tag item to render
+     * @param {number[]} path - Array index path to this item
+     * @returns {HTMLElement} Rendered tree item element
+     */
     function renderTreeItem(item, path) {
       const div = document.createElement('div');
       div.className = 'tqb-tree-item';
@@ -869,30 +938,11 @@
       return div;
     }
 
-    // Get item at path helper function
-    function getItemAtPath(path) {
-      let current = {
-        items: tags
-      }; // Start with root container
-
-      for (let i = 0; i < path.length; i++) {
-        const segment = path[i];
-        if (segment === 'items') {
-          current = current.items;
-        } else {
-          const index = parseInt(segment);
-          if (Array.isArray(current)) {
-            current = current[index];
-          } else {
-            return null;
-          }
-        }
-      }
-
-      return current;
-    }
-
-    // Move item up or down in its parent array
+    /**
+     * Move an item up or down within its parent array
+     * @param {number[]} path - Path to the item
+     * @param {number} direction - -1 for up, 1 for down
+     */
     function moveItem(path, direction) {
       if (path.length < 1) return; // Need at least one index
 
@@ -922,7 +972,11 @@
 
       saveStorage();
       render();
-    } // Add drag and drop event handlers
+    }
+
+    /**
+     * Add drag and drop event handlers to tree items
+     */
     function addDragHandlers() {
       let draggedElement = null;
       let draggedPath = null;
@@ -998,7 +1052,11 @@
       });
     }
 
-    // Reorder items by moving source to target position
+    /**
+     * Reorder items by moving source to target position
+     * @param {string[]} sourcePath - Path of item being moved
+     * @param {string[]} targetPath - Path of drop target
+     */
     function reorderItems(sourcePath, targetPath) {
       // Convert paths to numbers
       const sourceIndices = sourcePath.map(p => parseInt(p));
@@ -1033,6 +1091,10 @@
       }
     }
 
+    /**
+     * Delete tag item at specified path
+     * @param {number[]} path - Path to the item to delete
+     */
     function deleteItemAtPath(path) {
       if (path.length === 1) {
         // Top-level item
@@ -1278,7 +1340,11 @@
       debouncedRenderFavorites(modalFavoritesList, modalFavoritesFilter);
     });
 
-    // --- Parse input to tree - COMPLETELY REWRITTEN ---
+    /**
+     * Parse query string into tag tree structure
+     * @param {string} queryString - Query string to parse
+     * @returns {Array} Array of tag objects
+     */
     function parseQuery(queryString) {
       const result = [];
       let pos = 0;
@@ -1442,7 +1508,9 @@
       return result;
     }
 
-    // --- Initialize ---
+    /**
+     * Initialize tags from page search input
+     */
     function initFromInput() {
       const val = inputEl.value.trim();
       if (val) {
@@ -1516,19 +1584,29 @@
       });
     }
 
-    // Load visibility state from localStorage
+    /**
+     * Load builder visibility state from localStorage
+     * @returns {boolean} Visibility state (default: true)
+     */
     function loadVisibilityState() {
       const saved = localStorage.getItem(siteVisibilityKey);
       return saved !== null ? JSON.parse(saved) : true; // Default to visible
     }
 
-    // Save visibility state to localStorage
+    /**
+     * Save builder visibility state to localStorage
+     * @param {boolean} visible - Visibility state
+     */
     function saveVisibilityState(visible) {
       localStorage.setItem(siteVisibilityKey, JSON.stringify(visible));
     }
 
     let builderVisible = loadVisibilityState();
 
+    /**
+     * Set builder visibility and update UI
+     * @param {boolean} visible - Whether builder should be visible
+     */
     function setBuilderVisible(visible) {
       builderVisible = visible;
       saveVisibilityState(visible);

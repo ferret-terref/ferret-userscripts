@@ -398,6 +398,24 @@
 
     let tags = [];
 
+    /**
+     * Debounce function to limit how often a function can be called
+     * @param {Function} func - The function to debounce
+     * @param {number} wait - The delay in milliseconds
+     * @returns {Function} Debounced function
+     */
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
     // --- Storage ---
     const siteStorageKey = getSiteStorageKey(STORAGE_KEY);
     const siteVisibilityKey = getSiteStorageKey(VISIBILITY_KEY);
@@ -528,6 +546,11 @@
       renderFavorites(favoritesList, favoritesFilter);
       renderFavorites(modalFavoritesList, modalFavoritesFilter);
     }
+
+    // Debounced version for search filtering (typing)
+    const debouncedRenderFavorites = debounce((targetList, targetFilter) => {
+      renderFavorites(targetList, targetFilter);
+    }, 150);
 
     function escapeHtml(text) {
       const div = document.createElement('div');
@@ -1026,11 +1049,11 @@
 
     // --- Favorites Filters ---
     favoritesFilter.addEventListener('input', () => {
-      renderFavorites(favoritesList, favoritesFilter);
+      debouncedRenderFavorites(favoritesList, favoritesFilter);
     });
 
     modalFavoritesFilter.addEventListener('input', () => {
-      renderFavorites(modalFavoritesList, modalFavoritesFilter);
+      debouncedRenderFavorites(modalFavoritesList, modalFavoritesFilter);
     });
 
     // --- Parse input to tree - COMPLETELY REWRITTEN ---

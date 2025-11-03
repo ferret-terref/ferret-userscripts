@@ -419,7 +419,7 @@
             <button id="tqb-copy-from" class="tqb-sync-btn" aria-label="Copy tags from page input">📋 Copy from input</button>
             <button id="tqb-paste-to" class="tqb-sync-btn" aria-label="Paste tags to page input">📤 Paste to input</button>
             <button id="tqb-save-favorite" class="tqb-sync-btn tqb-save-btn" aria-label="Save current tags as favorite">💾 Save Current</button>
-            <button id="tqb-clear-all" class="tqb-clear-btn" aria-label="Clear all tags">🗑️ Clear All</button>
+            <button id="tqb-clear-all" class="tqb-clear-btn" aria-label="Clear all tags">🗑️ Clear Builder</button>
             <button id="tqb-preferences" class="tqb-sync-btn tqb-btn-gray" aria-label="Open preferences" style="grid-column: 1 / -1;">⚙️ Preferences</button>
         </div>
 

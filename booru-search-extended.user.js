@@ -24,6 +24,7 @@
   const VISIBILITY_KEY = 'tqb-visibility';
   const THEME_KEY = 'tqb-theme';
   const COMPACT_KEY = 'tqb-compact';
+  const AUTO_SUBMIT_KEY = 'tqb-auto-submit';
 
   // Site configuration for different booru sites
   const SITE_CONFIGS = {
@@ -319,6 +320,12 @@
         #tqb-compact-toggle:checked + span + span {
           transform: translateX(20px);
         }
+        #tqb-auto-submit-toggle:checked + span {
+          background-color: var(--tqb-accent-blue);
+        }
+        #tqb-auto-submit-toggle:checked + span + span {
+          transform: translateX(20px);
+        }
         /* Modal */
         .tqb-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: none; justify-content: center; align-items: center; }
         .tqb-modal { background: var(--tqb-bg-primary); color: var(--tqb-text-primary); border-radius: var(--tqb-radius-lg); padding: var(--tqb-spacing-lg); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
@@ -495,6 +502,16 @@
                         <span style="position:absolute;height:14px;width:14px;left:3px;bottom:3px;background-color:white;border-radius:50%;transition:0.3s;"></span>
                     </label>
                     <span style="color:var(--tqb-text-secondary);font-size:var(--tqb-font-md);">Compact</span>
+                </div>
+                <h4 style="color: var(--tqb-accent-blue); margin-top: 0; margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md);">🚀 Auto-Submit</h4>
+                <div style="display:flex;align-items:center;gap:var(--tqb-spacing-md);margin-bottom:var(--tqb-spacing-lg);">
+                    <span style="color:var(--tqb-text-secondary);font-size:var(--tqb-font-md);">Off</span>
+                    <label style="display:inline-flex;align-items:center;cursor:pointer;position:relative;width:40px;height:20px;">
+                        <input type="checkbox" id="tqb-auto-submit-toggle" style="opacity:0;width:0;height:0;">
+                        <span style="position:absolute;top:0;left:0;right:0;bottom:0;background-color:var(--tqb-bg-tertiary);border-radius:20px;transition:0.3s;"></span>
+                        <span style="position:absolute;height:14px;width:14px;left:3px;bottom:3px;background-color:white;border-radius:50%;transition:0.3s;"></span>
+                    </label>
+                    <span style="color:var(--tqb-text-secondary);font-size:var(--tqb-font-md);">On</span>
                 </div>
                 <h4 style="color: var(--tqb-accent-blue); margin-top: 0; margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md);">⌨️ Keyboard Shortcuts</h4>
                 <div class="tqb-shortcut-item">
@@ -691,6 +708,7 @@
     const siteFavoritesKey = getSiteStorageKey('tqb-favorites');
     const siteThemeKey = getSiteStorageKey(THEME_KEY);
     const siteCompactKey = getSiteStorageKey(COMPACT_KEY);
+    const siteAutoSubmitKey = getSiteStorageKey(AUTO_SUBMIT_KEY);
 
     /**
      * Apply theme by setting data attribute on document
@@ -748,6 +766,23 @@
      */
     function saveCompact(compact) {
       localStorage.setItem(siteCompactKey, compact.toString());
+    }
+
+    /**
+     * Load auto-submit preference from storage
+     * @returns {boolean} true if auto-submit enabled
+     */
+    function loadAutoSubmit() {
+      const stored = localStorage.getItem(siteAutoSubmitKey);
+      return stored === 'true';
+    }
+
+    /**
+     * Save auto-submit preference to storage
+     * @param {boolean} autoSubmit - true to submit form after pasting, false otherwise
+     */
+    function saveAutoSubmit(autoSubmit) {
+      localStorage.setItem(siteAutoSubmitKey, autoSubmit.toString());
     }
 
     /**
@@ -1409,6 +1444,14 @@
         inputEl.dispatchEvent(new Event('change', {
           bubbles: true
         }));
+
+        // Auto-submit if enabled
+        if (loadAutoSubmit()) {
+          const form = inputEl.closest('form');
+          if (form) {
+            form.submit();
+          }
+        }
       }
     });
 
@@ -1481,6 +1524,10 @@
       const compactToggle = helpModalOverlay.querySelector('#tqb-compact-toggle');
       const currentCompact = loadCompact();
       compactToggle.checked = currentCompact;
+      // Update auto-submit toggle state
+      const autoSubmitToggle = helpModalOverlay.querySelector('#tqb-auto-submit-toggle');
+      const currentAutoSubmit = loadAutoSubmit();
+      autoSubmitToggle.checked = currentAutoSubmit;
     });
 
     const helpModalClose = helpModalOverlay.querySelector('#tqb-help-modal-close');
@@ -1508,6 +1555,13 @@
       const compact = e.target.checked;
       saveCompact(compact);
       applyCompact(compact);
+    });
+
+    // --- Auto-Submit Toggle ---
+    const autoSubmitToggle = helpModalOverlay.querySelector('#tqb-auto-submit-toggle');
+    autoSubmitToggle.addEventListener('change', (e) => {
+      const autoSubmit = e.target.checked;
+      saveAutoSubmit(autoSubmit);
     });
 
     // --- Keyboard Shortcuts ---

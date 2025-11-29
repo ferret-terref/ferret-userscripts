@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name         Booru Search Extended
-// @version      1.6
+// @version      1.7
 // @description  Advanced tag builder with tree-based UI and robust parsing - works on multiple booru sites
 // @author       ferret-terref
+// @license      MIT
 // @homepageURL  https://github.com/ferret-terref/booru-search-extended
 // @updateURL    https://github.com/ferret-terref/booru-search-extended/raw/refs/heads/main/booru-search-extended.user.js
 // @downloadURL  https://github.com/ferret-terref/booru-search-extended/raw/refs/heads/main/booru-search-extended.user.js
-// @license      MIT
 // @match        https://rule34.xxx/index.php?page=post&s=list*
 // @match        https://gelbooru.com/index.php?page=post&s=list*
+// @match        https://danbooru.donmai.us/posts
 // @match        https://danbooru.donmai.us/posts?*
 // @match        https://danbooru.donmai.us
 // @match        https://safebooru.org/index.php?page=post&s=list*
@@ -39,6 +40,16 @@
       inputSelector: 'input[name="tags"]',
       autocompleteContainer: '.awesomplete',
       appendToContainer: true, // true = append to end, false = prepend to start
+      syntax: {
+        orOperator: '~', // tag1 ~ tag2
+        orGrouping: 'parentheses', // ( tag1 ~ tag2 )
+        notOperator: '-', // -tag
+        andOperator: ' ', // tag1 tag2 (space)
+        fuzzyOperator: '~', // tag~ (suffix)
+        wildcardSupport: true // tag*
+      },
+      ratings: ['safe', 'questionable', 'explicit'], // s, q, e
+      sortOptions: ['score', 'rating', 'user', 'height', 'width', 'parent', 'source', 'updated', 'id'],
       sidebarCSS: `
         .content-post { max-width: calc(100% - 320px) !important; }
         #tag-sidebar { min-width: 300px !important; width: 300px !important; }
@@ -51,6 +62,16 @@
       inputSelector: 'input[name="tags"]',
       autocompleteContainer: '.awesomplete',
       appendToContainer: true, // true = append to end, false = prepend to start
+      syntax: {
+        orOperator: '~',
+        orGrouping: 'parentheses',
+        notOperator: '-',
+        andOperator: ' ',
+        fuzzyOperator: '~',
+        wildcardSupport: true
+      },
+      ratings: ['safe', 'questionable', 'explicit'], // s, q, e
+      sortOptions: ['score', 'rating', 'user', 'height', 'width', 'updated', 'id'],
       sidebarCSS: `
         .content { max-width: calc(100% - 320px) !important; }
         .sidebar { min-width: 300px !important; width: 300px !important; }
@@ -63,6 +84,17 @@
       inputSelector: 'input[name="tags"]',
       autocompleteContainer: '.ui-autocomplete',
       appendToContainer: true, // true = append to end, false = prepend to start
+      syntax: {
+        orOperator: 'or', // tag1 or tag2
+        orGrouping: 'parentheses', // (tag1 tag2) or (tag3 tag4)
+        notOperator: '-', // -tag
+        andOperator: ' ', // tag1 tag2 (space)
+        fuzzyOperator: null, // Not supported on Danbooru
+        wildcardSupport: true, // tag*
+        negateGroup: true // -(tag1 tag2) - negate entire group
+      },
+      ratings: ['general', 'sensitive', 'questionable', 'explicit'], // g, s, q, e
+      sortOptions: ['score', 'favcount', 'created_at', 'change', 'comment', 'comment_bumped', 'note', 'artcomm', 'mpixels', 'portrait', 'landscape', 'filesize', 'tagcount', 'rank', 'random', 'id'],
       sidebarCSS: `
         #content { margin-right: 320px !important; }
         #sidebar { width: 300px !important; min-width: 300px !important; }
@@ -75,6 +107,16 @@
       inputSelector: 'input[name="tags"]',
       autocompleteContainer: '.awesomplete',
       appendToContainer: true, // true = append to end, false = prepend to start
+      syntax: {
+        orOperator: '~',
+        orGrouping: 'parentheses',
+        notOperator: '-',
+        andOperator: ' ',
+        fuzzyOperator: '~',
+        wildcardSupport: true
+      },
+      ratings: ['safe', 'questionable', 'explicit'], // s, q, e
+      sortOptions: ['score', 'rating', 'user', 'height', 'width', 'updated', 'id'],
       sidebarCSS: `
         .sidebar, .tag-search {
           min-width: 280px !important;
@@ -87,6 +129,16 @@
       inputSelector: 'input[name="tags"]',
       autocompleteContainer: '.awesomplete',
       appendToContainer: true, // true = append to end, false = prepend to start
+      syntax: {
+        orOperator: '~',
+        orGrouping: 'parentheses',
+        notOperator: '-',
+        andOperator: ' ',
+        fuzzyOperator: '~',
+        wildcardSupport: true
+      },
+      ratings: ['safe', 'questionable', 'explicit'], // s, q, e
+      sortOptions: ['score', 'rating', 'user', 'height', 'width', 'updated', 'id'],
       sidebarCSS: `
         .sidebar { min-width: 280px !important; }
       `
@@ -97,6 +149,16 @@
       inputSelector: 'input[name="tags"]',
       autocompleteContainer: '.awesomplete',
       appendToContainer: true, // true = append to end, false = prepend to start
+      syntax: {
+        orOperator: '~',
+        orGrouping: 'parentheses',
+        notOperator: '-',
+        andOperator: ' ',
+        fuzzyOperator: '~',
+        wildcardSupport: true
+      },
+      ratings: ['safe', 'questionable', 'explicit'], // s, q, e
+      sortOptions: ['score', 'rating', 'user', 'height', 'width', 'updated', 'id'],
       sidebarCSS: `
         .content-post { max-width: calc(100% - 320px) !important; }
         #tag-sidebar { min-width: 300px !important; width: 300px !important; }
@@ -111,6 +173,16 @@
       inputSelector: 'input[name="tags"]',
       autocompleteContainer: '.awesomplete',
       appendToContainer: false, // true = append to end, false = prepend to start
+      syntax: {
+        orOperator: '~',
+        orGrouping: 'parentheses',
+        notOperator: '-',
+        andOperator: ' ',
+        fuzzyOperator: '~',
+        wildcardSupport: true
+      },
+      ratings: ['safe', 'questionable', 'explicit'], // s, q, e
+      sortOptions: ['score', 'rating', 'user', 'height', 'width', 'updated', 'id'],
       sidebarCSS: `
         .content-post { max-width: calc(100% - 320px) !important; }
         #tag-sidebar, .flex_side_items { min-width: 300px !important; width: 300px !important; }
@@ -233,7 +305,7 @@
         .tqb-favorites-list::-webkit-scrollbar, .tqb-modal::-webkit-scrollbar { width: 8px; }
         .tqb-favorites-list::-webkit-scrollbar-track, .tqb-modal::-webkit-scrollbar-track { background: var(--tqb-bg-secondary); border-radius: var(--tqb-radius-sm); }
         .tqb-favorites-list::-webkit-scrollbar-thumb, .tqb-modal::-webkit-scrollbar-thumb { background: var(--tqb-bg-tertiary); border-radius: var(--tqb-radius-sm); }
-        .tqb-favorites-list::-webkit-scrollbar-thumb:hover, .tqb-modal::-webkit-scrollbar-thumb:hover { background: var(--tqb-bg-hover); }
+        .tqb-favorites-list::-webkit-scrollbar-thumb:hover, .tqb-modal::-webkit-scrollbar-thumb:hover { background: var(--tqb-bg-hover) !important; }
         /* Builder */
         .tqb-toggle-btn { background: var(--tqb-bg-primary); color: var(--tqb-text-primary); border: none; border-radius: 6px; padding: 8px 14px; font-size: var(--tqb-font-lg); cursor: pointer; box-shadow: 0 2px 8px #0003; margin: var(--tqb-spacing-lg) 0 8px; display: block; width: 100%; }
         .tqb-builder { background: var(--tqb-bg-primary); color: var(--tqb-text-primary); padding: var(--tqb-spacing-lg); border-radius: var(--tqb-radius-lg); font-family: system-ui; font-size: var(--tqb-font-md); margin-bottom: var(--tqb-spacing-lg); transition: opacity 0.2s, visibility 0.2s; opacity: 1; visibility: visible; }
@@ -243,13 +315,13 @@
         .tqb-header button { width: 100%; }
         .tqb-sync-btn, .tqb-clear-btn, .tqb-view-favorites-btn { border: none; border-radius: var(--tqb-radius-md); padding: var(--tqb-spacing-md) var(--tqb-spacing-md); cursor: pointer; font-size: var(--tqb-font-sm); display: flex; align-items: center; justify-content: center; gap: var(--tqb-spacing-sm); color: white; }
         .tqb-sync-btn { background: var(--tqb-accent-green); }
-        .tqb-sync-btn:hover { background: var(--tqb-accent-green-hover); }
+        .tqb-sync-btn:hover { background: var(--tqb-accent-green-hover) !important; }
         .tqb-save-btn { background: var(--tqb-accent-amber); color: var(--tqb-bg-primary); }
-        .tqb-save-btn:hover { background: var(--tqb-accent-amber-hover); }
+        .tqb-save-btn:hover { background: var(--tqb-accent-amber-hover) !important; }
         .tqb-clear-btn { background: var(--tqb-accent-red); }
-        .tqb-clear-btn:hover { background: var(--tqb-accent-red-hover); }
+        .tqb-clear-btn:hover { background: var(--tqb-accent-red-hover) !important; }
         .tqb-view-favorites-btn { background: var(--tqb-accent-amber); color: var(--tqb-bg-primary); font-weight: 500; }
-        .tqb-view-favorites-btn:hover { background: var(--tqb-accent-amber-hover); }
+        .tqb-view-favorites-btn:hover { background: var(--tqb-accent-amber-hover) !important; }
         /* Input */
         .tqb-input-row { display: flex; gap: var(--tqb-spacing-sm); margin-bottom: var(--tqb-spacing-md); flex-wrap: wrap; justify-content: space-between; background: var(--tqb-bg-secondary); padding: var(--tqb-spacing-md); border-radius: var(--tqb-radius-md); }
         .tqb-input-row input, .tqb-input-row select { border: none; border-radius: var(--tqb-radius-md); padding: var(--tqb-spacing-sm); font-size: var(--tqb-font-md); background: var(--tqb-bg-input); color: var(--tqb-text-primary); }
@@ -257,7 +329,16 @@
         .tqb-input-row input:focus { background: var(--tqb-bg-input) !important; }
         .tqb-input-row select { min-width: 120px; }
         .tqb-input-row button { background: #3b82f6; color: white; border: none; border-radius: var(--tqb-radius-md); padding: var(--tqb-spacing-md) var(--tqb-spacing-md); cursor: pointer; }
-        .tqb-input-row button:hover { background: #2563eb; }
+        .tqb-input-row button:hover { background: #2563eb !important; }
+        /* Quick Add Buttons */
+        .tqb-quick-add-section { background: var(--tqb-bg-secondary); border-radius: var(--tqb-radius-md); padding: var(--tqb-spacing-md); margin-bottom: var(--tqb-spacing-md); }
+        .tqb-quick-add-title { font-size: var(--tqb-font-sm); color: var(--tqb-text-secondary); margin-bottom: var(--tqb-spacing-sm); font-weight: 500; }
+        .tqb-quick-add-group { margin-bottom: var(--tqb-spacing-sm); }
+        .tqb-quick-add-group:last-child { margin-bottom: 0; }
+        .tqb-quick-add-label { font-size: var(--tqb-font-xs); color: var(--tqb-text-secondary); margin-bottom: var(--tqb-spacing-xs); display: block; }
+        .tqb-quick-add-buttons { display: flex; gap: var(--tqb-spacing-xs); flex-wrap: wrap; }
+        .tqb-quick-btn { background: var(--tqb-bg-tertiary); color: var(--tqb-text-primary); border: 1px solid var(--tqb-border-color); border-radius: var(--tqb-radius-sm); padding: var(--tqb-spacing-sm) var(--tqb-spacing-md); font-size: var(--tqb-font-sm); cursor: pointer; transition: all 0.2s; font-weight: 500; }
+        .tqb-quick-btn:hover { background: var(--tqb-accent-blue); color: white; border-color: var(--tqb-accent-blue); }
         /* Tree */
         .tqb-tree { background: var(--tqb-bg-secondary); border-radius: var(--tqb-radius-md); padding: var(--tqb-spacing-md); margin-bottom: var(--tqb-spacing-md); }
         .tqb-tree-item { margin: var(--tqb-spacing-sm) 0; background: transparent; }
@@ -270,13 +351,13 @@
         .tqb-tag-item.tqb-drag-over { border: 2px dashed var(--tqb-accent-blue); background: var(--tqb-accent-blue-dark); }
         .tqb-tag-label { font-size: var(--tqb-font-sm); color: var(--tqb-text-primary); word-break: break-word; line-height: 1.3; flex: 1; min-width: 0; }
         .tqb-tag-btn { background: transparent; border: none; color: var(--tqb-text-secondary); cursor: pointer; padding: var(--tqb-spacing-sm); border-radius: var(--tqb-spacing-sm); font-size: var(--tqb-font-sm); }
-        .tqb-tag-btn:hover { background: var(--tqb-bg-hover); color: var(--tqb-text-primary); }
+        .tqb-tag-btn:hover { background: var(--tqb-bg-hover) !important; color: var(--tqb-text-primary) !important; }
         .tqb-tag-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        .tqb-tag-btn:disabled:hover { background: transparent; color: var(--tqb-text-secondary); }
+        .tqb-tag-btn:disabled:hover { background: transparent !important; color: var(--tqb-text-secondary) !important; }
         .tqb-toggle-visibility-btn { color: var(--tqb-accent-green); filter: grayscale(1); }
-        .tqb-toggle-visibility-btn:hover { background: var(--tqb-accent-green); color: white; }
+        .tqb-toggle-visibility-btn:hover { background: var(--tqb-accent-green) !important; color: white !important; }
         .tqb-move-btn { color: var(--tqb-accent-blue); }
-        .tqb-move-btn:hover { background: var(--tqb-accent-blue-dark); color: white; }
+        .tqb-move-btn:hover { background: var(--tqb-accent-blue-dark) !important; color: white !important; }
         .tqb-group-header { color: var(--tqb-accent-blue); font-weight: 500; margin-bottom: var(--tqb-spacing-sm); font-size: var(--tqb-font-sm); }
         .tqb-empty { color: var(--tqb-text-secondary); font-style: italic; text-align: center; padding: var(--tqb-spacing-lg); background: var(--tqb-bg-secondary); border-radius: var(--tqb-radius-md); border: 1px solid var(--tqb-border-color); }
         /* Preview */
@@ -292,7 +373,7 @@
         .tqb-favorites-search input:focus { background: var(--tqb-bg-input) !important; }
         .tqb-favorites-list { max-height: 200px; overflow-y: auto; background: transparent; }
         .tqb-favorite-item { background: var(--tqb-bg-tertiary); border-radius: var(--tqb-radius-sm); padding: var(--tqb-spacing-md); margin: var(--tqb-spacing-sm) 0; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; transition: background .2s; }
-        .tqb-favorite-item:hover { background: var(--tqb-bg-hover); }
+        .tqb-favorite-item:hover { background: var(--tqb-bg-hover) !important; }
         .tqb-favorite-info { flex: 1; min-width: 0; margin-right: var(--tqb-spacing-sm); background: transparent; }
         .tqb-favorite-info > * { background: transparent; }
         .tqb-favorite-name { color: var(--tqb-text-primary); font-weight: 500; font-size: var(--tqb-font-md); }
@@ -300,9 +381,9 @@
         .tqb-favorite-date { color: var(--tqb-text-tertiary); font-size: var(--tqb-font-sm); margin-top: var(--tqb-spacing-sm); }
         .tqb-favorite-actions { display: flex; gap: var(--tqb-spacing-sm); background: transparent; }
         .tqb-favorite-edit { background: var(--tqb-accent-blue); color: white; border: none; border-radius: var(--tqb-spacing-sm); padding: var(--tqb-spacing-sm) var(--tqb-spacing-sm); font-size: var(--tqb-font-sm); cursor: pointer; }
-        .tqb-favorite-edit:hover { background: var(--tqb-accent-blue-dark); }
+        .tqb-favorite-edit:hover { background: var(--tqb-accent-blue-dark) !important; color: white !important; }
         .tqb-favorite-delete { background: var(--tqb-accent-red); color: white; border: none; border-radius: var(--tqb-spacing-sm); padding: var(--tqb-spacing-sm) var(--tqb-spacing-sm); font-size: var(--tqb-font-sm); cursor: pointer; }
-        .tqb-favorite-delete:hover { background: var(--tqb-accent-red-hover); }
+        .tqb-favorite-delete:hover { background: var(--tqb-accent-red-hover) !important; }
         /* Toggle switch checked state */
         #tqb-theme-toggle:checked + span { background-color: var(--tqb-accent-blue); }
         #tqb-theme-toggle:checked + span + span { transform: translateX(20px);}
@@ -318,7 +399,7 @@
         .tqb-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--tqb-spacing-lg); border-bottom: 1px solid var(--tqb-border-color); padding-bottom: var(--tqb-spacing-lg); background: transparent; }
         .tqb-modal-title { font-size: var(--tqb-font-lg); font-weight: 600; color: var(--tqb-accent-amber); margin: 0; background: transparent; }
         .tqb-modal-close { background: var(--tqb-text-tertiary); color: white; border: none; border-radius: var(--tqb-radius-sm); padding: var(--tqb-spacing-sm); cursor: pointer; font-size: var(--tqb-font-lg); width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; }
-        .tqb-modal-close:hover { background: var(--tqb-bg-hover); }
+        .tqb-modal-close:hover { background: var(--tqb-bg-hover) !important; }
         /* Help modal */
         .tqb-help-content { background: transparent; }
         .tqb-help-content h4 { background: transparent; }
@@ -335,20 +416,20 @@
         .tqb-dialog-buttons { display: flex; gap: var(--tqb-spacing-sm); justify-content: flex-end; }
         .tqb-dialog-btn { border: none; border-radius: var(--tqb-radius-sm); padding: var(--tqb-spacing-sm) var(--tqb-spacing-lg); cursor: pointer; font-size: var(--tqb-font-md); font-weight: 500; }
         .tqb-dialog-btn-primary { background: var(--tqb-accent-blue); color: white; }
-        .tqb-dialog-btn-primary:hover { background: var(--tqb-accent-blue-dark); }
+        .tqb-dialog-btn-primary:hover { background: var(--tqb-accent-blue-dark) !important; }
         .tqb-dialog-btn-danger { background: var(--tqb-accent-red); color: white; }
-        .tqb-dialog-btn-danger:hover { background: var(--tqb-accent-red-hover); }
+        .tqb-dialog-btn-danger:hover { background: var(--tqb-accent-red-hover) !important; }
         .tqb-dialog-btn-secondary { background: var(--tqb-bg-tertiary); color: var(--tqb-text-primary); }
-        .tqb-dialog-btn-secondary:hover { background: var(--tqb-bg-hover); }
+        .tqb-dialog-btn-secondary:hover { background: var(--tqb-bg-hover) !important; }
         /* Utility classes */
         .tqb-flex-row { display: flex; gap: var(--tqb-spacing-sm); margin-bottom: var(--tqb-spacing-md); }
         .tqb-flex-1 { flex: 1; }
         .tqb-btn-blue { background: var(--tqb-accent-blue); color: white; border: none; border-radius: var(--tqb-radius-sm); padding: var(--tqb-spacing-sm); font-size: var(--tqb-font-md); cursor: pointer; }
-        .tqb-btn-blue:hover { background: var(--tqb-accent-blue-dark); }
+        .tqb-btn-blue:hover { background: var(--tqb-accent-blue-dark) !important; }
         .tqb-btn-amber { background: var(--tqb-accent-amber); color: white; border: none; border-radius: var(--tqb-radius-sm); padding: var(--tqb-spacing-sm); font-size: var(--tqb-font-md); cursor: pointer; }
-        .tqb-btn-amber:hover { background: var(--tqb-accent-amber-hover); }
+        .tqb-btn-amber:hover { background: var(--tqb-accent-amber-hover) !important; }
         .tqb-btn-gray { background: var(--tqb-text-tertiary); }
-        .tqb-btn-gray:hover { background: var(--tqb-bg-hover); }
+        .tqb-btn-gray:hover { background: var(--tqb-bg-hover) !important; }
         .tqb-section-title { color: var(--tqb-accent-blue); margin-top: 0; margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md); }
         .tqb-section-title-spaced { color: var(--tqb-accent-blue); margin-top: var(--tqb-spacing-lg); margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md); }
         .tqb-setting-label { color: var(--tqb-text-primary); min-width: 200px; }
@@ -490,12 +571,24 @@
             <input id="tqb-input" placeholder="Enter tag name" aria-label="Tag name input">
             <select id="tqb-op" aria-label="Tag operator">
                 <option value="and">AND</option>
-                <option value="or">OR group</option>
-                <option value="not">NOT (-tag)</option>
-                <option value="fuzzy">FUZZY (~)</option>
-                <option value="wildcard">WILDCARD (*)</option>
+                <option value="or">${siteConfig.syntax.orOperator === 'or' ? 'OR' : siteConfig.syntax.orOperator} group</option>
+                <option value="not">NOT (${siteConfig.syntax.notOperator})</option>
+                ${siteConfig.syntax.fuzzyOperator ? `<option value="fuzzy">FUZZY (${siteConfig.syntax.fuzzyOperator})</option>` : ''}
             </select>
             <button id="tqb-add" aria-label="Add tag">Add</button>
+        </div>
+
+        <!-- Quick Add Section -->
+        <div class="tqb-quick-add-section">
+            <div class="tqb-quick-add-title">⚡ Quick Add</div>
+            <div class="tqb-quick-add-group">
+                <label class="tqb-quick-add-label">Rating:</label>
+                <div class="tqb-quick-add-buttons" id="tqb-quick-ratings"></div>
+            </div>
+            <div class="tqb-quick-add-group">
+                <label class="tqb-quick-add-label">Sort:</label>
+                <div class="tqb-quick-add-buttons" id="tqb-quick-sorts"></div>
+            </div>
         </div>
 
         <!-- Tree view -->
@@ -565,6 +658,18 @@
       'tqb-help-modal-title',
       '⚙️ Preferences',
       `<div class="tqb-help-content" style="padding: 1rem;">
+                <h4 class="tqb-section-title">🌐 Site Syntax</h4>
+                <div class="tqb-settings-section" style="margin-bottom: 1rem;">
+                  <div style="padding: 0.5rem; background: var(--tqb-bg-secondary); border-radius: var(--tqb-radius-sm); font-size: var(--tqb-font-sm);">
+                    <strong>${siteConfig.name}</strong> syntax:<br>
+                    <span style="color: var(--tqb-text-secondary);">
+                      • OR: <code>${siteConfig.syntax.orOperator === 'or' ? 'tag1 or tag2' : 'tag1 ' + siteConfig.syntax.orOperator + ' tag2'}</code><br>
+                      • NOT: <code>${siteConfig.syntax.notOperator}tag</code><br>
+                      ${siteConfig.syntax.fuzzyOperator ? `• FUZZY: <code>tag${siteConfig.syntax.fuzzyOperator}</code><br>` : '• FUZZY: <span style="color: var(--tqb-error);">not supported</span><br>'}
+                      • WILDCARD: <code>tag*</code> (type * in tag name)
+                    </span>
+                  </div>
+                </div>
                 <h4 class="tqb-section-title">⚙️ Settings</h4>
                 <div class="tqb-settings-section">
                   ${generateSettingToggle('🎨 Theme', 'tqb-theme-toggle', 'Dark', 'Light')}
@@ -593,10 +698,12 @@
 
     // Builder elements
     const [input, opSelect, addBtn, treeArea, preview, previewSection, copyFromBtn, pasteToBtn,
-      viewFavoritesBtn, clearAllBtn, preferencesBtn, saveFavoriteBtn, favoritesFilter, favoritesList
+      viewFavoritesBtn, clearAllBtn, preferencesBtn, saveFavoriteBtn, favoritesFilter, favoritesList,
+      quickRatingsContainer, quickSortsContainer
     ] = ['#tqb-input', '#tqb-op', '#tqb-add', '#tqb-tree', '#tqb-preview', '.tqb-preview-section',
       '#tqb-copy-from', '#tqb-paste-to', '#tqb-view-favorites', '#tqb-clear-all',
-      '#tqb-preferences', '#tqb-save-favorite', '#tqb-favorites-filter', '#tqb-favorites-list'
+      '#tqb-preferences', '#tqb-save-favorite', '#tqb-favorites-filter', '#tqb-favorites-list',
+      '#tqb-quick-ratings', '#tqb-quick-sorts'
     ]
     .map(sel => builder.querySelector(sel));
 
@@ -609,6 +716,51 @@
     .map(sel => modalOverlay.querySelector(sel));
 
     let tags = [];
+
+    // Populate quick-add buttons based on site config
+    const orderPrefix = siteConfig.hostname === 'danbooru.donmai.us' ? 'order' : 'sort';
+
+    // Rating buttons
+    siteConfig.ratings.forEach(rating => {
+      const btn = document.createElement('button');
+      btn.className = 'tqb-quick-btn';
+      btn.textContent = rating.charAt(0).toUpperCase(); // First letter uppercase
+      btn.title = `Add rating:${rating}`;
+      btn.addEventListener('click', () => {
+        tags.push({
+          op: 'and',
+          tagValue: `rating:${rating}`,
+          enabled: true
+        });
+        saveStorage();
+        render();
+        showToast(`Added rating:${rating}`, 'success', 2000);
+      });
+      quickRatingsContainer.appendChild(btn);
+    });
+
+    // Sort buttons - show most common ones
+    const commonSorts = siteConfig.hostname === 'danbooru.donmai.us' ? ['score', 'favcount', 'rank', 'random'] : ['score', 'rating', 'updated'];
+
+    commonSorts.forEach(sort => {
+      if (siteConfig.sortOptions.includes(sort)) {
+        const btn = document.createElement('button');
+        btn.className = 'tqb-quick-btn';
+        btn.textContent = sort;
+        btn.title = `Add ${orderPrefix}:${sort}`;
+        btn.addEventListener('click', () => {
+          tags.push({
+            op: 'and',
+            tagValue: `${orderPrefix}:${sort}`,
+            enabled: true
+          });
+          saveStorage();
+          render();
+          showToast(`Added ${orderPrefix}:${sort}`, 'success', 2000);
+        });
+        quickSortsContainer.appendChild(btn);
+      }
+    });
 
     /** Debounce function to limit how often a function can be called */
     function debounce(func, wait) {
@@ -1122,7 +1274,7 @@
     }
 
     /** Build query string for a single tag item (recursive) */
-    function buildQueryItem(item) {
+    function buildQueryItem(item, syntax) {
       // Skip disabled items
       if (item.enabled === false) return null;
 
@@ -1132,12 +1284,29 @@
           console.warn('OR group items is not an array, treating as empty');
           return '( )';
         }
-        const enabledItems = item.items.map(buildQueryItem).filter(Boolean);
+        const enabledItems = item.items.map(i => buildQueryItem(i, syntax)).filter(Boolean);
         if (enabledItems.length === 0) return null;
-        return `( ${enabledItems.join(' ~ ')} )`;
+
+        // Use site-specific OR syntax
+        if (syntax.orOperator === 'or') {
+          // Danbooru style: tag1 or tag2 or tag3
+          // For grouped AND-OR combinations: (tag1 tag2) or (tag3 tag4)
+          // Since our OR groups only contain simple tags, just join with 'or'
+          return enabledItems.join(' or ');
+        } else {
+          // Other sites: ( tag1 ~ tag2 ~ tag3 )
+          return `( ${enabledItems.join(` ${syntax.orOperator} `)} )`;
+        }
       }
-      if (item.op === 'not') return `-${item.tagValue}`;
-      if (item.op === 'fuzzy') return `${item.tagValue}~`;
+      if (item.op === 'not') return `${syntax.notOperator}${item.tagValue}`;
+      if (item.op === 'fuzzy') {
+        if (syntax.fuzzyOperator) {
+          return `${item.tagValue}${syntax.fuzzyOperator}`;
+        } else {
+          // Fuzzy not supported on this site, use regular tag
+          return item.tagValue;
+        }
+      }
       if (item.op === 'wildcard') return `${item.tagValue}`;
       return item.tagValue;
     }
@@ -1150,7 +1319,18 @@
         tags = [];
       }
 
-      return tags.map(buildQueryItem).filter(Boolean).join(' ').trim();
+      // Get site-specific syntax
+      const siteConfig = getCurrentSiteConfig();
+      const syntax = siteConfig?.syntax || {
+        orOperator: '~',
+        orGrouping: 'parentheses',
+        notOperator: '-',
+        andOperator: ' ',
+        fuzzyOperator: '~',
+        wildcardSupport: true
+      };
+
+      return tags.map(item => buildQueryItem(item, syntax)).filter(Boolean).join(syntax.andOperator).trim();
     }
 
     /** Render the tag tree and preview */
@@ -1182,8 +1362,18 @@
       const div = document.createElement('div');
       div.className = 'tqb-tree-item';
 
+      // Get site-specific syntax for labels
+      const siteConfig = getCurrentSiteConfig();
+      const syntax = siteConfig?.syntax || {
+        orOperator: '~',
+        notOperator: '-',
+        fuzzyOperator: '~',
+        wildcardSupport: true
+      };
+
       if (item.op === 'or') {
-        // OR group
+        // OR group - show site-specific operator
+        const orLabel = syntax.orOperator === 'or' ? 'OR' : syntax.orOperator;
         const isEnabled = item.enabled !== false;
         const isActuallyDisabled = parentDisabled || !isEnabled;
         const eyeIcon = isActuallyDisabled ? TAG_DISABLED_ICON : TAG_ENABLED_ICON;
@@ -1192,7 +1382,7 @@
         div.innerHTML = `
           <div class="tqb-tag-item${disabledClass}" draggable="true" data-path="${path.join(',')}">
             <button class="tqb-tag-btn tqb-toggle-visibility-btn" title="Toggle visibility" aria-label="Toggle group visibility">${eyeIcon}</button>
-            <span class="tqb-tag-label">OR Group (${item.items.length} items)</span>
+            <span class="tqb-tag-label">${orLabel} Group (${item.items.length} items)</span>
             <button class="tqb-tag-btn tqb-move-btn" title="Move up" aria-label="Move OR group up">↑</button>
             <button class="tqb-tag-btn tqb-move-btn" title="Move down" aria-label="Move OR group down">↓</button>
             <button class="tqb-tag-btn" title="Add item to group" aria-label="Add item to OR group">+</button>
@@ -1253,9 +1443,9 @@
         // Single tag
         const opLabels = {
           'and': '',
-          'not': 'NOT: ',
-          'fuzzy': 'FUZZY: ',
-          'wildcard': 'WILDCARD: '
+          'not': `${syntax.notOperator}`,
+          'fuzzy': syntax.fuzzyOperator ? 'FUZZY: ' : '⚠️ FUZZY (unsupported): ',
+          'wildcard': ''
         };
 
         const isEnabled = item.enabled !== false;
@@ -1687,11 +1877,20 @@
 
     /** Parse query string into tag tree structure */
     function parseQuery(queryString) {
+      // Get site-specific syntax
+      const siteConfig = getCurrentSiteConfig();
+      const syntax = siteConfig?.syntax || {
+        orOperator: '~',
+        notOperator: '-',
+        fuzzyOperator: '~',
+        wildcardSupport: true
+      };
+
       const result = [];
       let pos = 0;
 
-      function peek() {
-        return pos < queryString.length ? queryString[pos] : null;
+      function peek(offset = 0) {
+        return pos + offset < queryString.length ? queryString[pos + offset] : null;
       }
 
       function advance() {
@@ -1704,25 +1903,35 @@
         }
       }
 
+      function peekWord() {
+        skipWhitespace();
+        let word = '';
+        let tempPos = pos;
+        while (tempPos < queryString.length && !/\s/.test(queryString[tempPos]) && queryString[tempPos] !== '(' && queryString[tempPos] !== ')') {
+          word += queryString[tempPos];
+          tempPos++;
+        }
+        return word.toLowerCase();
+      }
+
       function parseToken() {
         skipWhitespace();
         if (!peek()) return null;
 
         let token = '';
 
-        // Read until we hit whitespace or standalone ~
-        // Parentheses are only special when surrounded by spaces
+        // Read until we hit whitespace or special characters
         while (peek() && !/\s/.test(peek())) {
           const char = peek();
 
-          // Check if this is a standalone ~ (OR separator)
-          if (char === '~') {
+          // Check for OR operator based on site syntax
+          if (syntax.orOperator === '~' && char === '~') {
             // Look ahead to see if there's whitespace after
             let nextPos = pos + 1;
             if (nextPos >= queryString.length || /\s/.test(queryString[nextPos])) {
               // This might be a standalone ~ OR the end of a fuzzy tag
               // If we already have a token, include this ~ as part of it (fuzzy tag)
-              if (token.length > 0) {
+              if (token.length > 0 && syntax.fuzzyOperator === '~') {
                 token += char;
                 advance();
                 break; // End of fuzzy tag
@@ -1730,7 +1939,9 @@
                 break; // This is a standalone ~, stop parsing token
               }
             }
-          } // Check if this is a standalone ( or ) (group delimiter)
+          }
+
+          // Check if this is a standalone ( or ) (group delimiter)
           if (char === '(' || char === ')') {
             // Look around to see if this is surrounded by spaces or at string boundaries
             const prevChar = pos > 0 ? queryString[pos - 1] : ' ';
@@ -1749,17 +1960,17 @@
         if (!token) return null;
 
         // Determine token type
-        if (token.startsWith('-')) {
+        if (token.startsWith(syntax.notOperator)) {
           return {
             op: 'not',
-            tagValue: token.slice(1)
+            tagValue: token.slice(syntax.notOperator.length)
           };
-        } else if (token.endsWith('~')) {
+        } else if (syntax.fuzzyOperator && token.endsWith(syntax.fuzzyOperator)) {
           return {
             op: 'fuzzy',
-            tagValue: token.slice(0, -1)
+            tagValue: token.slice(0, -syntax.fuzzyOperator.length)
           };
-        } else if (token.includes('*')) {
+        } else if (syntax.wildcardSupport && token.includes('*')) {
           return {
             op: 'wildcard',
             tagValue: token
@@ -1793,9 +2004,15 @@
                 items: nestedGroup
               });
             }
-          } else if (peek() === '~') {
-            // Skip OR operator
+          } else if (syntax.orOperator === '~' && peek() === '~') {
+            // Skip ~ OR operator (for sites using ~)
             advance();
+          } else if (syntax.orOperator === 'or' && peekWord() === 'or') {
+            // Skip 'or' keyword (for Danbooru)
+            const word = peekWord();
+            for (let i = 0; i < word.length; i++) {
+              advance();
+            }
           } else {
             // Regular token
             const token = parseToken();
@@ -1820,6 +2037,16 @@
         skipWhitespace();
         if (!peek()) break;
 
+        // Check for 'or' keyword at top level (Danbooru style: tag1 or tag2)
+        if (syntax.orOperator === 'or' && peekWord() === 'or') {
+          // Skip the 'or' keyword
+          const word = peekWord();
+          for (let i = 0; i < word.length; i++) {
+            advance();
+          }
+          continue;
+        }
+
         if (peek() === '(') {
           // Parse a group
           const groupItems = parseGroup();
@@ -1831,14 +2058,52 @@
               items: groupItems
             });
           }
-        } else if (peek() === '~') {
-          // Skip standalone ~ operator (shouldn't occur at top level, but handle it)
+        } else if (syntax.orOperator === '~' && peek() === '~') {
+          // Skip standalone ~ operator (shouldn't occur at top level for ~ syntax, but handle it)
           advance();
         } else {
           // Parse a single token
           const token = parseToken();
           if (token) {
-            result.push(token);
+            // For Danbooru, check if this is part of an OR sequence at top level
+            if (syntax.orOperator === 'or') {
+              skipWhitespace();
+              if (peekWord() === 'or') {
+                // This token is part of an OR group - collect all OR'd items
+                const orItems = [token];
+
+                while (peekWord() === 'or') {
+                  // Skip 'or' keyword
+                  const word = peekWord();
+                  for (let i = 0; i < word.length; i++) {
+                    advance();
+                  }
+                  skipWhitespace();
+
+                  const nextToken = parseToken();
+                  if (nextToken) {
+                    orItems.push(nextToken);
+                  }
+                  skipWhitespace();
+                }
+
+                // Create OR group
+                if (orItems.length > 1) {
+                  result.push({
+                    op: 'or',
+                    items: orItems
+                  });
+                } else {
+                  result.push(orItems[0]);
+                }
+              } else {
+                // Not part of an OR sequence, just a regular tag
+                result.push(token);
+              }
+            } else {
+              // Not Danbooru syntax, just add the token
+              result.push(token);
+            }
           } else {
             // If parseToken returns null but we still have a character, advance to prevent infinite loop
             advance();

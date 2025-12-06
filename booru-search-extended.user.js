@@ -795,7 +795,7 @@
         title: 'GIF format'
       },
       {
-        tag: 'transparent',
+        tag: 'transparent_background',
         icon: '🫥',
         title: 'Transparent background'
       },

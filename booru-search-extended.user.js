@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Booru Search Extended
-// @version      1.8
+// @version      1.9
 // @description  Advanced tag builder with tree-based UI and robust parsing - works on multiple booru sites
 // @author       ferret-terref
 // @license      MIT
@@ -590,6 +590,10 @@
                 <label class="tqb-quick-add-label">Sort:</label>
                 <div class="tqb-quick-add-buttons" id="tqb-quick-sorts"></div>
             </div>
+            <div class="tqb-quick-add-group">
+                <label class="tqb-quick-add-label">Meta:</label>
+                <div class="tqb-quick-add-buttons" id="tqb-quick-meta"></div>
+            </div>
         </div>
 
         <!-- Tree view -->
@@ -761,6 +765,92 @@
         });
         quickSortsContainer.appendChild(btn);
       }
+    });
+
+    // Meta tags - popular metadata tags
+    const quickMetaContainer = document.getElementById('tqb-quick-meta');
+    const metaTags = [{
+        tag: 'animated',
+        icon: '🎬',
+        title: 'Animated content'
+      },
+      {
+        tag: 'video',
+        icon: '📹',
+        title: 'Video content'
+      },
+      {
+        tag: 'sound',
+        icon: '🔊',
+        title: 'Has sound/audio'
+      },
+      {
+        tag: 'comic',
+        icon: '📖',
+        title: 'Comic/sequential art'
+      },
+      {
+        tag: 'gif',
+        icon: '🖼️',
+        title: 'GIF format'
+      },
+      {
+        tag: 'transparent',
+        icon: '🫥',
+        title: 'Transparent background'
+      },
+      {
+        tag: 'absurd_res',
+        icon: '🖥️',
+        title: 'High resolution (3200x2400+)'
+      },
+      {
+        tag: 'hi_res',
+        icon: '📐',
+        title: 'High res (1600x1200+)'
+      },
+      {
+        tag: 'wallpaper',
+        icon: '🌄',
+        title: 'Wallpaper aspect ratio'
+      },
+      {
+        tag: 'wide_image',
+        icon: '📏',
+        title: 'Wide/panoramic image'
+      },
+      {
+        tag: 'sequence',
+        icon: '🎞️',
+        title: 'Image sequence/series'
+      },
+      {
+        tag: 'loop',
+        icon: '🔁',
+        title: 'Looping animation'
+      }
+    ];
+
+    metaTags.forEach(({
+      tag,
+      icon,
+      title
+    }) => {
+      const btn = document.createElement('button');
+      btn.className = 'tqb-quick-btn';
+      btn.textContent = icon;
+      btn.title = title;
+      btn.addEventListener('click', () => {
+        tags.push({
+          op: 'and',
+          tagValue: tag,
+          enabled: true
+        });
+        saveStorage();
+        render();
+        showToast(`Added ${tag}`, 'success', 2000);
+      });
+      quickMetaContainer.appendChild(btn);
     });
 
     /** Debounce function to limit how often a function can be called */

@@ -377,6 +377,9 @@
                         id
                         title
                         details
+                        folder {
+                            path
+                        }
                     }
                 }
             }
@@ -405,6 +408,15 @@
     return data?.data?.findGalleries?.galleries || [];
   }
 
+  // Extract folder name from full path
+  function getFolderName(path) {
+    if (!path) return '';
+    // Handle both forward slashes and backslashes (including double backslashes)
+    const normalized = path.replace(/\\\\/g, '/').replace(/\\/g, '/');
+    const segments = normalized.split('/').filter(s => s.trim());
+    return segments.length > 0 ? segments[segments.length - 1] : '';
+  }
+
   // Simple similarity check for titles
   function calculateTitleSimilarity(str1, str2) {
     if (!str1 || !str2) return 0;
@@ -423,12 +435,16 @@
     const intersection = new Set([...words1].filter(x => words2.has(x)));
     const union = new Set([...words1, ...words2]);
 
+    var similarity = intersection.size / union.size;
+    console.info(`Title similarity between "${str1}" and "${str2}": ${similarity.toFixed(2)}`);
     return intersection.size / union.size;
   }
 
   async function findMatchingGallery(scrapedTitle) {
+    console.log(`[Stash Updater] Searching for matching gallery for title: "${scrapedTitle}"`);
     const galleries = await searchGalleriesByTitle(scrapedTitle);
 
+    console.log(`[Stash Updater] Found ${galleries.length} galleries matching search title`);
     if (galleries.length === 0) return null;
 
     // Find gallery with highest title similarity
@@ -436,15 +452,19 @@
     let bestScore = 0;
 
     for (const gallery of galleries) {
-      const similarity = calculateTitleSimilarity(scrapedTitle, gallery.title);
+      // Use folder name as fallback if title is empty
+      const galleryTitle = gallery.title || getFolderName(gallery.folder?.path);
+      const similarity = calculateTitleSimilarity(scrapedTitle, galleryTitle);
       if (similarity > bestScore) {
         bestScore = similarity;
         bestMatch = gallery;
       }
     }
 
-    // Only auto-populate if similarity is high enough (> 0.8)
-    if (bestScore > 0.8) {
+    console.log(`[Stash Updater] Best match: ID ${bestMatch.id} with score ${bestScore.toFixed(2)}`);
+
+    // Only auto-populate if similarity is high enough (>= 0.8)
+    if (bestScore >= 0.8) {
       return bestMatch;
     }
 

@@ -13,6 +13,7 @@
 // @match        *://e-hentai.org/g/*/*
 // @match        *://exhentai.org/g/*/*
 // @match        *://www.luscious.net/albums/*
+// @match        *://hentai-cosplay-xxx.com/image/*
 // @grant        GM_xmlhttpRequest
 // @connect      localhost
 // @connect      127.0.0.1
@@ -237,6 +238,31 @@
         // exhentai has Japanese title in #gj
         const gj = document.querySelector('#gj');
         return gj ? gj.innerText.trim() : '';
+      }
+    },
+
+    'hentai-cosplay-xxx.com': {
+      name: 'hentai-cosplay-xxx.com',
+      getTags: function () {
+        const tags = [];
+        const tagSection = document.querySelector('#detail_tag');
+        if (!tagSection) return tags;
+
+        tagSection.querySelectorAll('a').forEach(link => {
+          const tagText = link.textContent.trim();
+          if (tagText) {
+            tags.push(tagText);
+          }
+        });
+
+        return tags;
+      },
+      getTitle: function () {
+        const titleH2 = document.querySelector('#title h2');
+        return titleH2 ? titleH2.textContent.trim() : '';
+      },
+      getDescription: function () {
+        return '';
       }
     },
 

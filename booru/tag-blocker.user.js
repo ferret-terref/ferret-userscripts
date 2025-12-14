@@ -6,6 +6,8 @@
 // @author       ferret-terref
 // @license      MIT
 // @homepageURL  https://github.com/ferret-terref/ferret-userscripts
+// @updateURL    https://github.com/ferret-terref/ferret-userscripts/raw/refs/heads/main/booru/tag-blocker.user.js
+// @downloadURL  https://github.com/ferret-terref/ferret-userscripts/raw/refs/heads/main/booru/tag-blocker.user.js
 // @match        https://rule34.xxx/index.php?page=post&s=list*
 // @match        https://rule34.xxx/index.php?page=post&s=view*
 // @match        https://gelbooru.com/index.php?page=post&s=list*

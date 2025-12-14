@@ -5,6 +5,9 @@
 // @description  Update galleries in Stash with metadata for nhentai, e-hentai, exhentai, and more
 // @author       ferret-terref
 // @license      MIT
+// @homepageURL  https://github.com/ferret-terref/ferret-userscripts
+// @updateURL    https://github.com/ferret-terref/ferret-userscripts/raw/refs/heads/main/stash/stash-update-gallery.user.js
+// @downloadURL  https://github.com/ferret-terref/ferret-userscripts/raw/refs/heads/main/stash/stash-update-gallery.user.js
 // @match        *://nhentai.net/g/*
 // @match        *://nhentai.to/g/*
 // @match        *://e-hentai.org/g/*/*

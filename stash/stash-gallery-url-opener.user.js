@@ -5,6 +5,9 @@
 // @description  Add open buttons to gallery URLs in Stash
 // @author       ferret-terref
 // @license      MIT
+// @homepageURL  https://github.com/ferret-terref/ferret-userscripts
+// @updateURL    https://github.com/ferret-terref/ferret-userscripts/raw/refs/heads/main/stash/stash-gallery-url-opener.user.js
+// @downloadURL  https://github.com/ferret-terref/ferret-userscripts/raw/refs/heads/main/stash/stash-gallery-url-opener.user.js
 // @match        http://localhost:9999/galleries/*
 // @grant        none
 // @run-at       document-idle

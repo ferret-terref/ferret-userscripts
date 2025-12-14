@@ -41,6 +41,14 @@
     localStorage.setItem('stashUpdaterApiKey', key);
   }
 
+  function getPanelPosition() {
+    return localStorage.getItem('stashUpdaterPosition') || 'top-right-float';
+  }
+
+  function setPanelPosition(position) {
+    localStorage.setItem('stashUpdaterPosition', position);
+  }
+
   // Get current configuration
   let STASH_GRAPHQL_URL = getStashUrl();
   let API_KEY = getApiKey();
@@ -499,9 +507,6 @@
 
   // === Persistent UI Panel ===
   const panel = document.createElement('div');
-  panel.style.position = 'fixed';
-  panel.style.top = '10px';
-  panel.style.right = '10px';
   panel.style.zIndex = 9999;
   panel.style.background = '#222';
   panel.style.color = '#fff';
@@ -513,6 +518,8 @@
   panel.style.display = 'flex';
   panel.style.flexDirection = 'column';
   panel.style.gap = '5px';
+  panel.style.transition = 'all 0.3s ease';
+  panel.style.overflowY = 'auto';
 
   const expandedIcon = '▲';
   const collapsedIcon = '▼';
@@ -673,6 +680,34 @@
   });
   settingsContent.appendChild(showKeyToggle);
 
+  const positionLabel = document.createElement('label');
+  positionLabel.innerText = 'Panel Position:';
+  positionLabel.style.display = 'block';
+  positionLabel.style.fontSize = '10px';
+  positionLabel.style.marginBottom = '3px';
+  settingsContent.appendChild(positionLabel);
+
+  const positionSelect = document.createElement('select');
+  positionSelect.style.width = '100%';
+  positionSelect.style.padding = '4px';
+  positionSelect.style.marginBottom = '8px';
+  positionSelect.style.border = '1px solid #555';
+  positionSelect.style.borderRadius = '3px';
+  positionSelect.style.fontSize = '10px';
+  positionSelect.style.boxSizing = 'border-box';
+  positionSelect.style.background = '#222';
+  positionSelect.style.color = '#fff';
+  positionSelect.innerHTML = `
+    <option value="top-right-float">Top Right (Floating)</option>
+    <option value="top-left-float">Top Left (Floating)</option>
+    <option value="bottom-right-float">Bottom Right (Floating)</option>
+    <option value="bottom-left-float">Bottom Left (Floating)</option>
+    <option value="left-sidebar">Left Sidebar</option>
+    <option value="right-sidebar">Right Sidebar</option>
+  `;
+  positionSelect.value = getPanelPosition();
+  settingsContent.appendChild(positionSelect);
+
   const saveSettingsBtn = document.createElement('button');
   saveSettingsBtn.innerText = 'Save Settings';
   saveSettingsBtn.style.width = '100%';
@@ -686,7 +721,7 @@
   settingsContent.appendChild(saveSettingsBtn);
 
   settingsSection.appendChild(settingsContent);
-  mainContent.appendChild(settingsSection);
+  panel.appendChild(settingsSection);
 
   // Settings toggle functionality
   let settingsExpanded = false;
@@ -696,10 +731,96 @@
     settingsToggle.innerText = settingsExpanded ? '⚙️ Hide Settings' : '⚙️ Settings';
   });
 
+  // Function to apply panel position
+  function applyPanelPosition(position) {
+    // Reset all position styles
+    panel.style.position = '';
+    panel.style.top = '';
+    panel.style.right = '';
+    panel.style.bottom = '';
+    panel.style.left = '';
+    panel.style.height = '';
+    panel.style.borderRadius = '';
+
+    // Remove any body margin adjustments
+    document.body.style.marginLeft = '';
+    document.body.style.marginRight = '';
+
+    const isSidebar = position === 'left-sidebar' || position === 'right-sidebar';
+
+    // Adjust info area height based on position
+    if (isSidebar) {
+      infoArea.style.maxHeight = 'calc(100vh - 250px)';
+    } else {
+      infoArea.style.maxHeight = '300px';
+    }
+
+    switch (position) {
+      case 'top-right-float':
+        panel.style.position = 'fixed';
+        panel.style.top = '10px';
+        panel.style.right = '10px';
+        panel.style.borderRadius = '5px';
+        break;
+      case 'top-left-float':
+        panel.style.position = 'fixed';
+        panel.style.top = '10px';
+        panel.style.left = '10px';
+        panel.style.borderRadius = '5px';
+        break;
+      case 'bottom-right-float':
+        panel.style.position = 'fixed';
+        panel.style.bottom = '10px';
+        panel.style.right = '10px';
+        panel.style.borderRadius = '5px';
+        break;
+      case 'bottom-left-float':
+        panel.style.position = 'fixed';
+        panel.style.bottom = '10px';
+        panel.style.left = '10px';
+        panel.style.borderRadius = '5px';
+        break;
+      case 'left-sidebar':
+        panel.style.position = 'fixed';
+        panel.style.top = '0';
+        panel.style.left = '0';
+        panel.style.bottom = '0';
+        panel.style.height = '100vh';
+        panel.style.borderRadius = '0';
+        document.body.style.marginLeft = '320px';
+        break;
+      case 'right-sidebar':
+        panel.style.position = 'fixed';
+        panel.style.top = '0';
+        panel.style.right = '0';
+        panel.style.bottom = '0';
+        panel.style.height = '100vh';
+        panel.style.borderRadius = '0';
+        document.body.style.marginRight = '320px';
+        break;
+    }
+
+    // Force expansion in sidebar mode
+    if (isSidebar) {
+      isExpanded = true;
+      toggleElements(true);
+      toggleBtn.innerText = expandedIcon;
+      toggleBtn.disabled = true;
+      toggleBtn.style.opacity = '0.5';
+      toggleBtn.style.cursor = 'not-allowed';
+      localStorage.setItem('stashUpdaterExpanded', true);
+    } else {
+      toggleBtn.disabled = false;
+      toggleBtn.style.opacity = '1';
+      toggleBtn.style.cursor = 'pointer';
+    }
+  }
+
   // Save settings
   saveSettingsBtn.addEventListener('click', () => {
     const newUrl = urlInput.value.trim();
     const newApiKey = apiKeyInput.value.trim();
+    const newPosition = positionSelect.value;
 
     if (!newUrl) {
       alert('Stash GraphQL URL cannot be empty!');
@@ -708,8 +829,12 @@
 
     setStashUrl(newUrl);
     setApiKey(newApiKey);
+    setPanelPosition(newPosition);
     STASH_GRAPHQL_URL = newUrl;
     API_KEY = newApiKey;
+
+    // Apply the new position
+    applyPanelPosition(newPosition);
 
     status.innerText = '✅ Settings saved!';
     status.style.color = '#4CAF50';
@@ -733,6 +858,9 @@
   toggleBtn.innerText = isExpanded ? expandedIcon : collapsedIcon;
 
   toggleBtn.addEventListener('click', () => {
+    // Don't allow toggling in sidebar mode
+    if (toggleBtn.disabled) return;
+
     isExpanded = !isExpanded;
     toggleElements(isExpanded);
     toggleBtn.innerText = isExpanded ? expandedIcon : collapsedIcon;
@@ -741,6 +869,9 @@
 
   document.body.appendChild(panel);
   toggleElements(isExpanded);
+
+  // Apply saved panel position on load
+  applyPanelPosition(getPanelPosition());
 
   // Store the current gallery info for comparison
   let currentGalleryInfo = null;

@@ -30,20 +30,30 @@ Update galleries in Stash with metadata from nhentai, e-hentai, exhentai, and mo
 
 ## Setup
 
-### Configure Stash API Settings
+### Configure Stash Connection
 
-The script needs to communicate with your Stash instance. By default, it's configured for:
+The script includes a built-in settings panel for easy configuration:
+
+1. **Open the Settings Panel**: Click the "⚙️ Settings" button in the Stash Updater panel
+2. **Configure Stash GraphQL URL**: 
+   - Default: `http://localhost:9999/graphql`
+   - Update if your Stash instance uses a different port or is on a remote server
+3. **Enter API Key**:
+   - Open Stash settings → Security → API Keys
+   - Create a new API key or copy an existing one
+   - Paste it into the API Key field (password-masked for security)
+   - Use the "Show API Key" checkbox to verify if needed
+4. **Save Settings**: Click "Save Settings" to persist your configuration
+
+Settings are stored in your browser's localStorage and will persist across sessions.
+
+**Manual Configuration** (if needed):
+You can also edit the script directly to set default values:
 
 ```javascript
-const STASH_GRAPHQL_URL = 'http://localhost:9999/graphql';
-const API_KEY = 'your-api-key-here';
+const DEFAULT_STASH_GRAPHQL_URL = 'http://localhost:9999/graphql';
+const DEFAULT_API_KEY = 'your-api-key-here';
 ```
-
-**To get your API key:**
-1. Open Stash settings
-2. Navigate to Security → API Keys
-3. Create a new API key or copy an existing one
-4. Replace `API_KEY` in the script with your key
 
 ## Usage
 
@@ -90,10 +100,15 @@ const API_KEY = 'your-api-key-here';
 - Parses tag categories from the tag list
 - Extracts posted date
 - Handles uploader as studio information
+Stash GraphQL URL is correct in Settings
+- Confirm the API key is valid in Settings
+- Check the gallery ID exists in Stash
+- Check browser console for error messages
 
-## Troubleshooting
-
-**Button not appearing?**
+**Settings not saving?**
+- Ensure localStorage is enabled in your browser
+- Check that cookies/storage aren't being blocked for the site
+- Try disabling strict tracking protection
 - Verify you added `?stashGalleryId=XXX` to the URL
 - Check that you're on a supported site's gallery page
 - Ensure your userscript manager is enabled
@@ -113,11 +128,18 @@ const API_KEY = 'your-api-key-here';
 **CORS errors?**
 - Ensure Stash CORS settings allow requests from the source domains
 - Check Stash security settings
+, use the Settings panel to update the GraphQL URL:
 
-## Advanced Configuration
+- Local custom port: `http://localhost:8080/graphql`
+- Remote server: `http://192.168.1.100:9999/graphql`
+- HTTPS: `https://mystash.example.com/graphql`
 
-### Custom Stash URL
+### Security Considerations
 
+- The API key is stored in your browser's localStorage
+- Use the password-masked input to prevent shoulder-surfing
+- Only install this script from trusted sources
+- Your API key grants full access to your Stash instance
 If your Stash instance is on a different port or remote server:
 
 ```javascript
@@ -125,9 +147,19 @@ const STASH_GRAPHQL_URL = 'http://your-stash-server:port/graphql';
 ```
 
 ### Adding New Sites
+Features
 
-The script is designed with a site configuration system. To add support for a new site:
+- **Visual Settings Panel** - Configure Stash URL and API key without editing code
+- **Persistent Configuration** - Settings saved in browser localStorage
+- **Secure API Key Storage** - Password-masked input with show/hide toggle
+- **Collapsible UI** - Minimize the panel when not in use
+- **Title Matching** - Auto-detects matching galleries by title
+- **Diff Highlighting** - Shows what will be added/changed before updating
+- **Multi-Site Support** - Works across nhentai, e-hentai, and exhentai
 
+## Security Note
+
+Your Stash API key is stored in your browser's localStorage. Keep your API key secure and only install this script from trusted source
 1. Add a new configuration object in `SITE_CONFIGS`
 2. Implement `getTags()`, `getTitle()`, `getDate()`, `getStudio()` functions
 3. Add the site to the `@match` directive

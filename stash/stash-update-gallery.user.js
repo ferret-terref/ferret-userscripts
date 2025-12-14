@@ -19,9 +19,31 @@
 (function () {
   'use strict';
 
-  const STASH_GRAPHQL_URL = 'http://localhost:9999/graphql';
-  const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJhZG1pbiIsInN1YiI6IkFQSUtleSIsImlhdCI6MTc2NTE1ODQyMX0.Lh1BOdMuGOlbeT4LZh8KaBDrlsQinXtmhmV14tRm4aM';
+  // Default configuration
+  const DEFAULT_STASH_GRAPHQL_URL = 'http://localhost:9999/graphql';
+  const DEFAULT_API_KEY = '';
   const STASH_GALLERY_ID_PARAM = 'stashGalleryId';
+
+  // Load configuration from localStorage
+  function getStashUrl() {
+    return localStorage.getItem('stashUpdaterUrl') || DEFAULT_STASH_GRAPHQL_URL;
+  }
+
+  function getApiKey() {
+    return localStorage.getItem('stashUpdaterApiKey') || DEFAULT_API_KEY;
+  }
+
+  function setStashUrl(url) {
+    localStorage.setItem('stashUpdaterUrl', url);
+  }
+
+  function setApiKey(key) {
+    localStorage.setItem('stashUpdaterApiKey', key);
+  }
+
+  // Get current configuration
+  let STASH_GRAPHQL_URL = getStashUrl();
+  let API_KEY = getApiKey();
 
   // === Site Configuration System ===
 
@@ -574,6 +596,128 @@
   status.style.fontSize = '12px';
   status.style.minHeight = '18px';
   mainContent.appendChild(status);
+
+  // Settings section
+  const settingsSection = document.createElement('div');
+  settingsSection.style.marginTop = '10px';
+  settingsSection.style.borderTop = '1px solid #444';
+  settingsSection.style.paddingTop = '10px';
+
+  const settingsToggle = document.createElement('button');
+  settingsToggle.innerText = '⚙️ Settings';
+  settingsToggle.style.width = '100%';
+  settingsToggle.style.padding = '5px';
+  settingsToggle.style.border = 'none';
+  settingsToggle.style.borderRadius = '3px';
+  settingsToggle.style.background = '#444';
+  settingsToggle.style.color = '#fff';
+  settingsToggle.style.cursor = 'pointer';
+  settingsToggle.style.fontSize = '11px';
+  settingsSection.appendChild(settingsToggle);
+
+  const settingsContent = document.createElement('div');
+  settingsContent.style.display = 'none';
+  settingsContent.style.marginTop = '8px';
+  settingsContent.style.padding = '8px';
+  settingsContent.style.background = '#333';
+  settingsContent.style.borderRadius = '3px';
+
+  const urlLabel = document.createElement('label');
+  urlLabel.innerText = 'Stash GraphQL URL:';
+  urlLabel.style.display = 'block';
+  urlLabel.style.fontSize = '10px';
+  urlLabel.style.marginBottom = '3px';
+  settingsContent.appendChild(urlLabel);
+
+  const urlInput = document.createElement('input');
+  urlInput.type = 'text';
+  urlInput.value = getStashUrl();
+  urlInput.placeholder = DEFAULT_STASH_GRAPHQL_URL;
+  urlInput.style.width = '100%';
+  urlInput.style.padding = '4px';
+  urlInput.style.marginBottom = '8px';
+  urlInput.style.border = '1px solid #555';
+  urlInput.style.borderRadius = '3px';
+  urlInput.style.fontSize = '10px';
+  urlInput.style.boxSizing = 'border-box';
+  settingsContent.appendChild(urlInput);
+
+  const apiKeyLabel = document.createElement('label');
+  apiKeyLabel.innerText = 'API Key:';
+  apiKeyLabel.style.display = 'block';
+  apiKeyLabel.style.fontSize = '10px';
+  apiKeyLabel.style.marginBottom = '3px';
+  settingsContent.appendChild(apiKeyLabel);
+
+  const apiKeyInput = document.createElement('input');
+  apiKeyInput.type = 'password';
+  apiKeyInput.value = getApiKey();
+  apiKeyInput.placeholder = 'Enter your Stash API key';
+  apiKeyInput.style.width = '100%';
+  apiKeyInput.style.padding = '4px';
+  apiKeyInput.style.marginBottom = '8px';
+  apiKeyInput.style.border = '1px solid #555';
+  apiKeyInput.style.borderRadius = '3px';
+  apiKeyInput.style.fontSize = '10px';
+  apiKeyInput.style.boxSizing = 'border-box';
+  settingsContent.appendChild(apiKeyInput);
+
+  const showKeyToggle = document.createElement('label');
+  showKeyToggle.style.display = 'block';
+  showKeyToggle.style.fontSize = '9px';
+  showKeyToggle.style.marginBottom = '8px';
+  showKeyToggle.style.cursor = 'pointer';
+  showKeyToggle.innerHTML = '<input type="checkbox" style="margin-right: 3px;"> Show API Key';
+  showKeyToggle.querySelector('input').addEventListener('change', (e) => {
+    apiKeyInput.type = e.target.checked ? 'text' : 'password';
+  });
+  settingsContent.appendChild(showKeyToggle);
+
+  const saveSettingsBtn = document.createElement('button');
+  saveSettingsBtn.innerText = 'Save Settings';
+  saveSettingsBtn.style.width = '100%';
+  saveSettingsBtn.style.padding = '5px';
+  saveSettingsBtn.style.border = 'none';
+  saveSettingsBtn.style.borderRadius = '3px';
+  saveSettingsBtn.style.background = '#4CAF50';
+  saveSettingsBtn.style.color = '#fff';
+  saveSettingsBtn.style.cursor = 'pointer';
+  saveSettingsBtn.style.fontSize = '10px';
+  settingsContent.appendChild(saveSettingsBtn);
+
+  settingsSection.appendChild(settingsContent);
+  mainContent.appendChild(settingsSection);
+
+  // Settings toggle functionality
+  let settingsExpanded = false;
+  settingsToggle.addEventListener('click', () => {
+    settingsExpanded = !settingsExpanded;
+    settingsContent.style.display = settingsExpanded ? 'block' : 'none';
+    settingsToggle.innerText = settingsExpanded ? '⚙️ Hide Settings' : '⚙️ Settings';
+  });
+
+  // Save settings
+  saveSettingsBtn.addEventListener('click', () => {
+    const newUrl = urlInput.value.trim();
+    const newApiKey = apiKeyInput.value.trim();
+
+    if (!newUrl) {
+      alert('Stash GraphQL URL cannot be empty!');
+      return;
+    }
+
+    setStashUrl(newUrl);
+    setApiKey(newApiKey);
+    STASH_GRAPHQL_URL = newUrl;
+    API_KEY = newApiKey;
+
+    status.innerText = '✅ Settings saved!';
+    status.style.color = '#4CAF50';
+    setTimeout(() => {
+      status.innerText = '';
+      status.style.color = '';
+    }, 3000);
+  });
 
   panel.appendChild(mainContent);
 

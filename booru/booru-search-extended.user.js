@@ -1394,6 +1394,18 @@
           return `( ${enabledItems.join(` ${syntax.orOperator} `)} )`;
         }
       }
+      if (item.op === 'and' && item.items) {
+        // AND group
+        if (!Array.isArray(item.items)) {
+          console.warn('AND group items is not an array, treating as empty');
+          return '( )';
+        }
+        const enabledItems = item.items.map(i => buildQueryItem(i, syntax)).filter(Boolean);
+        if (enabledItems.length === 0) return null;
+
+        // AND groups: join with spaces, wrap in parentheses
+        return `( ${enabledItems.join(' ')} )`;
+      }
       if (item.op === 'not') return `${syntax.notOperator}${item.tagValue}`;
       if (item.op === 'fuzzy') {
         if (syntax.fuzzyOperator) {
@@ -1535,6 +1547,73 @@
 
         div.appendChild(groupDiv);
 
+      } else if (item.op === 'and' && item.items) {
+        // AND group
+        const isEnabled = item.enabled !== false;
+        const isActuallyDisabled = parentDisabled || !isEnabled;
+        const eyeIcon = isActuallyDisabled ? TAG_DISABLED_ICON : TAG_ENABLED_ICON;
+        const disabledClass = isActuallyDisabled ? ' tqb-disabled' : '';
+
+        div.innerHTML = `
+          <div class="tqb-tag-item${disabledClass}" draggable="true" data-path="${path.join(',')}">
+            <button class="tqb-tag-btn tqb-toggle-visibility-btn" title="Toggle visibility" aria-label="Toggle group visibility">${eyeIcon}</button>
+            <span class="tqb-tag-label">AND Group (${item.items.length} items)</span>
+            <button class="tqb-tag-btn tqb-move-btn" title="Move up" aria-label="Move AND group up">↑</button>
+            <button class="tqb-tag-btn tqb-move-btn" title="Move down" aria-label="Move AND group down">↓</button>
+            <button class="tqb-tag-btn" title="Add item to group" aria-label="Add item to AND group">+</button>
+            <button class="tqb-tag-btn" title="Delete group" aria-label="Delete AND group">❌</button>
+          </div>
+        `;
+
+        const [toggleBtn, moveUpBtn, moveDownBtn, addBtn, deleteBtn] = div.querySelectorAll('.tqb-tag-btn');
+
+        toggleBtn.onclick = (e) => {
+          e.stopPropagation();
+          item.enabled = !isEnabled;
+          saveStorage();
+          render();
+        };
+        moveUpBtn.onclick = (e) => {
+          e.stopPropagation();
+          moveItem(path, -1);
+        };
+        moveDownBtn.onclick = (e) => {
+          e.stopPropagation();
+          moveItem(path, 1);
+        };
+        addBtn.onclick = async () => {
+          const tagName = await showPrompt('Add tag to AND group:');
+          if (tagName && tagName.trim()) {
+            item.items.push({
+              op: 'and',
+              tagValue: tagName.trim(),
+              enabled: true
+            });
+            saveStorage();
+            render();
+          }
+        };
+
+        deleteBtn.onclick = async () => {
+          if (await showConfirm('Delete this AND group?')) {
+            deleteItemAtPath(path);
+            saveStorage();
+            render();
+          }
+        };
+
+        // Render group items
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'tqb-tree-group';
+
+        item.items.forEach((subItem, subIndex) => {
+          const subPath = [...path, 'items', subIndex];
+          const subEl = renderTreeItem(subItem, subPath, isActuallyDisabled);
+          groupDiv.appendChild(subEl);
+        });
+
+        div.appendChild(groupDiv);
+
       } else {
         // Single tag
         const opLabels = {
@@ -1613,7 +1692,7 @@
         // Top-level item
         parent = tags;
       } else if (path.length === 3 && path[1] === 'items') {
-        // Item in OR group
+        // Item in group
         const groupIndex = parseInt(path[0]);
         parent = tags[groupIndex].items;
       } else {
@@ -1741,12 +1820,12 @@
         // Top-level item
         tags.splice(path[0], 1);
       } else if (path.length === 3 && path[1] === 'items') {
-        // Item in OR group
+        // Item in group
         const groupIndex = path[0];
         const itemIndex = path[2];
         tags[groupIndex].items.splice(itemIndex, 1);
 
-        // If OR group becomes empty or has only one item, simplify
+        // If group becomes empty or has only one item, simplify
         if (tags[groupIndex].items.length === 0) {
           tags.splice(groupIndex, 1);
         } else if (tags[groupIndex].items.length === 1) {
@@ -2081,6 +2160,7 @@
 
       function parseGroup() {
         const items = [];
+        let isOrGroup = false;
         skipWhitespace();
 
         // Skip opening parenthesis
@@ -2093,18 +2173,17 @@
 
           if (peek() === '(') {
             // Nested group
-            const nestedGroup = parseGroup();
-            if (nestedGroup.length > 0) {
-              items.push({
-                op: 'or',
-                items: nestedGroup
-              });
+            const nestedItem = parseGroup();
+            if (nestedItem) {
+              items.push(nestedItem);
             }
           } else if (syntax.orOperator === '~' && peek() === '~') {
             // Skip ~ OR operator (for sites using ~)
+            isOrGroup = true;
             advance();
           } else if (syntax.orOperator === 'or' && peekWord() === 'or') {
             // Skip 'or' keyword (for Danbooru)
+            isOrGroup = true;
             const word = peekWord();
             for (let i = 0; i < word.length; i++) {
               advance();
@@ -2125,7 +2204,18 @@
           advance();
         }
 
-        return items;
+        // Return the parsed group
+        console.log('Parsed group:', items, 'isOrGroup:', isOrGroup);
+        if (items.length === 1) {
+          return items[0];
+        } else if (items.length > 1) {
+          return {
+            op: isOrGroup ? 'or' : 'and',
+            items: items
+          };
+        } else {
+          return null;
+        }
       }
 
       // Main parsing loop
@@ -2145,14 +2235,9 @@
 
         if (peek() === '(') {
           // Parse a group
-          const groupItems = parseGroup();
-          if (groupItems.length === 1) {
-            result.push(groupItems[0]);
-          } else if (groupItems.length > 1) {
-            result.push({
-              op: 'or',
-              items: groupItems
-            });
+          const groupItem = parseGroup();
+          if (groupItem) {
+            result.push(groupItem);
           }
         } else if (syntax.orOperator === '~' && peek() === '~') {
           // Skip standalone ~ operator (shouldn't occur at top level for ~ syntax, but handle it)

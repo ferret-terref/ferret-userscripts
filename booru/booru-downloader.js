@@ -10,13 +10,21 @@
 // @match        https://rule34.xxx/index.php?page=post*
 // @match        https://danbooru.donmai.us/posts/*?q=*
 // @match        https://danbooru.donmai.us/posts/*
+// @match        https://danbooru.donmai.us/posts
+// @match        https://danbooru.donmai.us
+// @match        https://danbooru.donmai.us/posts?page=*&tags=*
 // @match        https://e621.net/posts/*
 // @match        https://gelbooru.com/index.php?page=post&s=view*
 // @match        https://rule34.us/index.php?r=posts/view&id=*
 // @match        https://boards.4channel.org/*
 // @match        https://boards.4chan.org/*
 // @match        https://yande.re/post/show*
+// @match        https://e-shuushuu.net/image/*
+// @match        https://safebooru.org/index.php?page=post&s=view&id=*
 // @include      /.*booru.*\/index\.php\?page=post&s=view&id=.*/
+// @match        https://realbooru.com/index.php?page=post&s=list&tags=*
+// @match        https://www.deviantart.com/*/art/*
+// @match        https://www.deviantart.com/art/*
 // @grant        GM_download
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
@@ -45,7 +53,7 @@
       --tqb-font-md: .9rem;
       --tqb-font-lg: 1.1rem;
       --tqb-spacing-sm: .3rem;
-      --tqb-spacing-md: .5rem;
+      --tqb-spacing-md: .25rem;
       --tqb-spacing-lg: 1rem;
     }
 
@@ -143,7 +151,9 @@
         }
       }, 300); // Match animation duration
     }, duration);
-  } // Site configuration for different booru sites
+  }
+
+  // Site configuration for different booru sites
   const SITE_CONFIGS = {
     'rule34.xxx': {
       name: 'Rule34',
@@ -172,16 +182,166 @@
     'boards.4chan.org': {
       name: '4chan',
       downloadXPath: "//a[contains(@class, 'gal-name')]",
-      customFileNameHandler: true
+      customHandler: {
+        getDownloadLink: function () {
+          const xpath = SITE_CONFIGS['boards.4chan.org'].downloadXPath;
+          const _evaluated = document.evaluate(xpath, document, null, XPathResult.ANY_TYPE, null);
+          if (_evaluated == null) return null;
+          const _element = _evaluated.iterateNext();
+          return _element ? _element.href : null;
+        },
+
+        getFileName: function () {
+          // 4chan specific handler
+          const xpath = SITE_CONFIGS['boards.4chan.org'].downloadXPath;
+          const _evaluated = document.evaluate(xpath, document, null, XPathResult.ANY_TYPE, null);
+          const _element = _evaluated.iterateNext();
+          let _name = _element.innerText;
+
+          if (_name.startsWith('file.'))
+            _name = _name.replace('file.', `file_${Date.now()}.`);
+          if (_name.length < 15)
+            _name = _name.replace('.', `_${Date.now()}.`);
+          return _name;
+        },
+        getTags: function () {
+          return [];
+        },
+        getTitle: function () {
+          return this.getFileName();
+        },
+        getAuthor: function () {
+          return '';
+        },
+        getPageUrl: function () {
+          const loc = window.location.href;
+          const cleanLoc = loc.split('#')[0].split('?')[0];
+          const selectedPost = document.querySelector('.gal-thumb.gal-highlight');
+
+          if (selectedPost) {
+            const postId = selectedPost.getAttribute('data-post').split('.')[1];
+            return `${cleanLoc}#p${postId}`;
+          }
+          return cleanLoc;
+        }
+      }
     },
     'boards.4channel.org': {
       name: '4channel',
       downloadXPath: "//a[contains(@class, 'gal-name')]",
-      customFileNameHandler: true
+      customHandler: {
+        // Use other 4chan handler since the site structure is the same
+        // get it via lookup
+        getDownloadLink: function () {
+          return SITE_CONFIGS['boards.4chan.org'].customHandler.getDownloadLink.call(this);
+        },
+        getFileName: function () {
+          return SITE_CONFIGS['boards.4chan.org'].customHandler.getFileName.call(this);
+        },
+        getTags: function () {
+          return SITE_CONFIGS['boards.4chan.org'].customHandler.getTags.call(this);
+        },
+        getTitle: function () {
+          return SITE_CONFIGS['boards.4chan.org'].customHandler.getTitle.call(this);
+        },
+      }
     },
     'realbooru.com': {
       name: 'Realbooru',
       downloadXPath: "//a[contains(., 'Original')]"
+    },
+    'e-shuushuu.net': {
+      name: 'E-Shuushuu',
+      downloadXPath: "//a[contains(@class, 'thumb_image')]"
+    },
+    'safebooru.org': {
+      name: 'Safebooru',
+      downloadXPath: "//a[contains(., 'Original image')]"
+    },
+    'www.deviantart.com': {
+      name: 'DeviantArt',
+      customHandler: {
+        getDownloadLink: () => {
+          const singleImage = document.querySelector('div[typeof="ImageObject"] img[fetchpriority="high"]');
+          const caroselImage = document.querySelector('figure div img');
+
+          if (singleImage && singleImage.src)
+            return singleImage.src;
+
+          // Fallback to carousel image
+          if (caroselImage && caroselImage.src)
+            return caroselImage.src;
+
+          // Failed to find an image, return null
+          return null;
+        },
+        getFileName: (_, link) => link.split('/').pop().split('?')[0],
+        getTags: function () {
+          const postTags = Array.from(document.querySelectorAll('a[data-tagname] span')).map(el => el.textContent.trim()).filter(Boolean);
+          const author = this?.getAuthor();
+          if (author) postTags.push(`artist:${author}`);
+          return postTags;
+        },
+        getTitle: () => {
+          const h1 = document.querySelector('h1');
+          return h1 ? h1.textContent.trim() : '';
+        },
+        getAuthor: () => {
+          const links = Array.from(document.querySelectorAll('.user-link[data-username]'));
+          const author = links.find(link => {
+            const username = link.getAttribute('data-username');
+            if (!username) return false;
+            return window.location.href.toLowerCase().includes(username.toLowerCase());
+          });
+          if (author) {
+            const span = author.querySelector('span');
+            if (span && span.innerText.trim()) return span.innerText.trim();
+            return author.getAttribute('data-username');
+          }
+          if (links.length > 0) {
+            const username = links[0].getAttribute('data-username');
+            if (username) return username;
+          }
+          return '';
+        }
+      }
+    }
+  };
+
+  // --- Default strategy for standard booru sites ---
+  const DEFAULT_STRATEGY = {
+    self: null,
+    getPageUrl: function () {
+      return window.location.href;
+    },
+    getDownloadLink: function (config) {
+      const _evaluated = document.evaluate(config.downloadXPath, document, null, XPathResult.ANY_TYPE, null);
+      if (_evaluated == null) return null;
+      const _element = _evaluated.iterateNext();
+      return _element ? _element.href : null;
+    },
+    getFileName: function (config, link) {
+      // Standard filename extraction
+      const _split = link.split('/');
+      const _dirtyName = _split[_split.length - 1];
+      return _dirtyName.split('?')[0];
+    },
+    getTags: function () {
+      return Array.from(document.querySelectorAll(
+        '.tag a, .tag-type-general a, .tag-type-artist a, .tag-type-character a, .tag-type-copyright a, .search-tag' +
+        ', ' +
+        '#tagLink > a' // realbooru
+      ))
+        .map(el => el.textContent.trim())
+        .filter(Boolean)
+        .filter(t => t !== '?')
+        .filter(t => t !== '');
+    },
+    getTitle: function (config, link) {
+      return this.getFileName(config, link);
+    },
+    getAuthor: function () {
+      return '';
     }
   };
 
@@ -217,18 +377,71 @@
   class SiteHandler {
     constructor(config) {
       this.config = config;
+      this.strategy = config.customHandler || DEFAULT_STRATEGY;
     }
 
-    // Public
     async saveItem() {
-      // Get the link
-      const _link = this._getPageLink();
-      let _name = this._getFileName(_link);
+      const _link = this.strategy.getDownloadLink(this.config);
+      if (!_link) {
+        showToast(`${this.config.name}: Download button not found.`, 'error', 4000);
+        return;
+      }
+      const _name = this.strategy.getFileName(this.config, _link);
+      let tags = this.strategy.getTags();
+      tags = Array.from(new Set(tags));
+
+      // Title/author for Snitch
+      const title = this.strategy.getTitle ? this.strategy.getTitle(this.config, _link) : _name;
+      const author = this.strategy.getAuthor ? this.strategy.getAuthor() : '';
+      const fileTitle = author && title ? `${title} (${author})` : title;
+
+      const mode = getDownloadMode();
+      if (mode === 'snitch') {
+        let snitchUrl = getSnitchUrl();
+        let folder = 'Images';
+        const ext = _link.split('?')[0].split('.').pop().toLowerCase();
+        const videoExts = ['mp4', 'webm', 'mkv', 'avi', 'mov', 'flv', 'wmv', 'mpeg', 'mpg', 'm4v', '3gp', 'ogg'];
+        if (videoExts.includes(ext)) folder = 'Videos';
+        try {
+          showToast('Sent to Snitch!', 'info', 3000);
+          if (window.location.hostname == 'danbooru.donmai.us') {
+            snitchUrl = snitchUrl.replace('/api/download', '/api/stash/update?scan_first=true');
+          }
+
+          const page_url = this.strategy?.getPageUrl?.() || window.location.href;
+
+          const resp = await fetch(snitchUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              items: [{
+                url: _link,
+                tags,
+                page_url: page_url,
+                title: fileTitle
+              }],
+              folder,
+            })
+          });
+          if (resp.ok) {
+            showToast('Snitch Success!', 'success', 3000);
+          } else {
+            const err = await resp.json().catch(() => ({}));
+            showToast('Snitch error: ' + (err.detail || resp.statusText), 'error', 5000);
+          }
+        } catch (e) {
+          showToast('Failed to send to Snitch: ' + e.message, 'error', 5000);
+        }
+        return;
+      }
 
       try {
         await this._download(_link, _name);
       } catch (e) {
         console.error(`[${this.config.name}] Download error:`, e);
+        showToast(`Download failed: ${e.message}`, 'error', 5000);
       }
     }
 
@@ -247,11 +460,6 @@
     }
 
     _getFileName(link) {
-      // Custom handler for 4chan sites
-      if (this.config.customFileNameHandler) {
-        return this._get4chanFileName();
-      }
-
       // Split url into individual pieces by '/';
       const _split = link.split('/');
 
@@ -261,20 +469,6 @@
       // Remove query parameter and return
       const _cleanName = _dirtyName.split('?')[0];
       return _cleanName;
-    }
-
-    _get4chanFileName() {
-      // 4chan specific handler
-      const _evaluated = document.evaluate(this.config.downloadXPath, document, null, XPathResult.ANY_TYPE, null);
-      const _element = _evaluated.iterateNext();
-      let _name = _element.innerText;
-
-      if (_name.startsWith('file.'))
-        _name = _name.replace('file.', `file_${Date.now()}.`);
-      if (_name.length < 15)
-        _name = _name.replace('.', `_${Date.now()}.`);
-
-      return _name;
     }
 
     async _download(link, name) {
@@ -433,6 +627,7 @@
   const DOWNLOAD_MODE_KEY = 'booru_downloader_mode';
   const HOTKEY_KEY = 'booru_downloader_hotkey';
   const SHOW_TOASTS_KEY = 'booru_downloader_show_toasts';
+  const SNITCH_URL_KEY = 'booru_downloader_snitch_url';
 
   function getDownloadMode() {
     return localStorage.getItem(DOWNLOAD_MODE_KEY) || 'browser';
@@ -457,6 +652,14 @@
 
   function setShowToasts(enabled) {
     localStorage.setItem(SHOW_TOASTS_KEY, enabled.toString());
+  }
+
+  function getSnitchUrl() {
+    return localStorage.getItem(SNITCH_URL_KEY) || 'http://localhost:9998/api/download';
+  }
+
+  function setSnitchUrl(url) {
+    localStorage.setItem(SNITCH_URL_KEY, url);
   }
 
   // Convert key event to readable hotkey string
@@ -527,6 +730,7 @@
     // Check if Tag Builder is present
     const tagBuilderPreferences = document.querySelector('#tqb-help-modal .tqb-help-content');
 
+    // Tag Builder integration
     if (tagBuilderPreferences) {
       // Tag Builder is present - add our settings to its preferences modal
       console.log('Booru Downloader: Integrating with Tag Builder preferences');
@@ -545,7 +749,7 @@
                 <span class="tqb-toggle-track"></span>
                 <span class="tqb-toggle-thumb"></span>
               </label>
-              <span class="tqb-setting-text">Manager</span>
+              <span class="tqb-setting-text">Snitch</span>
             </div>
           </div>
           <div class="tqb-shortcut-item">
@@ -573,10 +777,10 @@
         const downloadModeToggle = document.querySelector('#bd-download-mode-toggle');
         if (downloadModeToggle) {
           const currentMode = getDownloadMode();
-          downloadModeToggle.checked = currentMode === 'manager';
+          downloadModeToggle.checked = currentMode === 'snitch';
 
           downloadModeToggle.addEventListener('change', (e) => {
-            const mode = e.target.checked ? 'manager' : 'browser';
+            const mode = e.target.checked ? 'snitch' : 'browser';
             setDownloadMode(mode);
             console.log(`Download mode changed to: ${mode}`);
           });
@@ -599,6 +803,20 @@
             console.log(`Show toasts changed to: ${e.target.checked}`);
           });
         }
+
+        // Add Snitch URL input
+        const snitchUrlDiv = document.createElement('div');
+        snitchUrlDiv.className = 'tqb-shortcut-item';
+        snitchUrlDiv.innerHTML = `
+          <span class="tqb-setting-label">🔗 Snitch API URL</span>
+          <input type="text" id="bd-snitch-url-input" class="bd-hotkey-input" style="min-width:300px;" placeholder="http://localhost:9998/api/download" />
+        `;
+        keyboardSection.parentNode.insertBefore(snitchUrlDiv, keyboardSection);
+        const snitchUrlInput = snitchUrlDiv.querySelector('#bd-snitch-url-input');
+        snitchUrlInput.value = getSnitchUrl();
+        snitchUrlInput.addEventListener('change', (e) => {
+          setSnitchUrl(e.target.value);
+        });
       }
 
       return; // Don't create standalone UI
@@ -625,7 +843,7 @@
                   <span class="tqb-toggle-track"></span>
                   <span class="tqb-toggle-thumb"></span>
                 </label>
-                <span class="tqb-setting-text">Manager</span>
+                <span class="tqb-setting-text">Snitch</span>
               </div>
             </div>
             <div class="tqb-shortcut-item">
@@ -644,6 +862,10 @@
                 <span class="tqb-setting-text">Visible</span>
               </div>
             </div>
+            <div class="tqb-shortcut-item">
+              <span class="tqb-setting-label">🔗 Snitch API URL</span>
+              <input type="text" id="bd-snitch-url-input" class="bd-hotkey-input" style="min-width:300px;" placeholder="http://localhost:9998/api/download" />
+            </div>
           </div>
         </div>
       </div>
@@ -654,11 +876,11 @@
 
     // Load current setting
     const currentMode = getDownloadMode();
-    downloadModeToggle.checked = currentMode === 'manager';
+    downloadModeToggle.checked = currentMode === 'snitch';
 
     // Save setting when changed
     downloadModeToggle.addEventListener('change', (e) => {
-      const mode = e.target.checked ? 'manager' : 'browser';
+      const mode = e.target.checked ? 'snitch' : 'browser';
       setDownloadMode(mode);
       console.log(`Download mode changed to: ${mode}`);
     });
@@ -678,6 +900,14 @@
       showToastsToggle.addEventListener('change', (e) => {
         setShowToasts(e.target.checked);
         console.log(`Show toasts changed to: ${e.target.checked}`);
+      });
+    }
+
+    const snitchUrlInput = modalOverlay.querySelector('#bd-snitch-url-input');
+    if (snitchUrlInput) {
+      snitchUrlInput.value = getSnitchUrl();
+      snitchUrlInput.addEventListener('change', (e) => {
+        setSnitchUrl(e.target.value);
       });
     }
 

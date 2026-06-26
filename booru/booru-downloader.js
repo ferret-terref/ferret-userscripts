@@ -15,6 +15,7 @@
 // @match        https://danbooru.donmai.us/posts?page=*&tags=*
 // @match        https://e621.net/posts/*
 // @match        https://gelbooru.com/index.php?page=post&s=view*
+// @match        https://gelbooru.com/index.php?page=post&s=list*
 // @match        https://rule34.us/index.php?r=posts/view&id=*
 // @match        https://boards.4channel.org/*
 // @match        https://boards.4chan.org/*
@@ -27,6 +28,7 @@
 // @match        https://www.deviantart.com/art/*
 // @grant        GM_download
 // @grant        GM_xmlhttpRequest
+// @connect      localhost
 // ==/UserScript==
 
 (function () {
@@ -205,7 +207,10 @@
           return _name;
         },
         getTags: function () {
-          return [];
+          const loc = window.location.href;
+          const cleanLog = loc.split('#')[0].split('?')[0];
+          const boardName = loc.split('/thread')[0].split('org/')[1];
+          return [boardName];
         },
         getTitle: function () {
           return this.getFileName();
@@ -330,6 +335,8 @@
       return Array.from(document.querySelectorAll(
         '.tag a, .tag-type-general a, .tag-type-artist a, .tag-type-character a, .tag-type-copyright a, .search-tag' +
         ', ' +
+        '.tag-list-name' + // e621
+        ', ' +
         '#tagLink > a' // realbooru
       ))
         .map(el => el.textContent.trim())
@@ -405,32 +412,41 @@
         try {
           showToast('Sent to Snitch!', 'info', 3000);
           if (window.location.hostname == 'danbooru.donmai.us') {
-            snitchUrl = snitchUrl.replace('/api/download', '/api/stash/update?scan_first=true');
+            snitchUrl = snitchUrl.replace('/api/v2/download', '/api/stash/update?scan_first=true');
           }
 
           const page_url = this.strategy?.getPageUrl?.() || window.location.href;
 
-          const resp = await fetch(snitchUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              items: [{
-                url: _link,
-                tags,
-                page_url: page_url,
-                title: fileTitle
-              }],
-              folder,
-            })
+          const formData = JSON.stringify({
+            items: [{
+              url: _link,
+              tags,
+              page_url,
+              title: fileTitle
+            }],
+            folder,
           });
-          if (resp.ok) {
-            showToast('Snitch Success!', 'success', 3000);
-          } else {
-            const err = await resp.json().catch(() => ({}));
-            showToast('Snitch error: ' + (err.detail || resp.statusText), 'error', 5000);
-          }
+          console.log("formData", formData);
+          GM_xmlhttpRequest({
+            method: "POST",
+            url: snitchUrl,
+            headers: {
+              "Content-Type": "application/json"
+            },
+            data: formData,
+            onload: function (resp) {
+              if (resp.status >= 200 && resp.status < 300) {
+                showToast('Snitch Success!', 'success', 3000);
+              } else {
+                let err = {};
+                try { err = JSON.parse(resp.responseText); } catch { }
+                showToast('Snitch error: ' + (err.detail || resp.statusText), 'error', 5000);
+              }
+            },
+            onerror: function () {
+              showToast('Snitch error: network failure', 'error', 5000);
+            }
+          });
         } catch (e) {
           showToast('Failed to send to Snitch: ' + e.message, 'error', 5000);
         }

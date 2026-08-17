@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Booru Downloader
-// @version      2.1
+// @version      2.2
 // @description  Press Ctrl+S on an image page to save it with configurable download modes
 // @author       ferret-terref
 // @license      MIT
@@ -22,6 +22,7 @@
 // @match        https://yande.re/post/show*
 // @match        https://e-shuushuu.net/image/*
 // @match        https://safebooru.org/index.php?page=post&s=view&id=*
+// @match        https://booru.allthefallen.moe/posts/*
 // @include      /.*booru.*\/index\.php\?page=post&s=view&id=.*/
 // @match        https://realbooru.com/index.php?page=post&s=list&tags=*
 // @match        https://www.deviantart.com/*/art/*
@@ -310,6 +311,10 @@
           return '';
         }
       }
+    },
+    'booru.allthefallen.moe': {
+      name: 'All The Fallen',
+      downloadXPath: '//a[@download]'
     }
   };
 
@@ -388,7 +393,7 @@
     }
 
     async saveItem() {
-      const _link = this.strategy.getDownloadLink(this.config);
+      let _link = this.strategy.getDownloadLink(this.config);
       if (!_link) {
         showToast(`${this.config.name}: Download button not found.`, 'error', 4000);
         return;
@@ -416,6 +421,18 @@
           }
 
           const page_url = this.strategy?.getPageUrl?.() || window.location.href;
+
+          const renameList = ['://gachi.gay/'];
+          let inRenameList = false;
+          for (let domain of renameList) {
+            if (_link.includes(domain)) {
+              inRenameList = true;
+            }
+          }
+
+          if (inRenameList) {
+            _link += '.png';
+          }
 
           const formData = JSON.stringify({
             items: [{
@@ -825,7 +842,7 @@
         snitchUrlDiv.className = 'tqb-shortcut-item';
         snitchUrlDiv.innerHTML = `
           <span class="tqb-setting-label">🔗 Snitch API URL</span>
-          <input type="text" id="bd-snitch-url-input" class="bd-hotkey-input" style="min-width:300px;" placeholder="http://localhost:9998/api/download" />
+          <input type="text" id="bd-snitch-url-input" class="bd-hotkey-input" style="min-width:300px;" placeholder="http://localhost:9998/api/v2/download" />
         `;
         keyboardSection.parentNode.insertBefore(snitchUrlDiv, keyboardSection);
         const snitchUrlInput = snitchUrlDiv.querySelector('#bd-snitch-url-input');

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Booru Search Extended
-// @version      1.9
+// @version      2.0
 // @description  Advanced tag builder with tree-based UI and robust parsing - works on multiple booru sites
 // @author       ferret-terref
 // @license      MIT
@@ -333,12 +333,13 @@
         .tqb-input-row button:hover { background: #2563eb !important; }
         /* Quick Add Buttons */
         .tqb-quick-add-section { background: var(--tqb-bg-secondary); border-radius: var(--tqb-radius-md); padding: var(--tqb-spacing-md); margin-bottom: var(--tqb-spacing-md); }
+        .tqb-quick-add-section * { background: unset; }
         .tqb-quick-add-title { font-size: var(--tqb-font-sm); color: var(--tqb-text-secondary); margin-bottom: var(--tqb-spacing-sm); font-weight: 500; }
         .tqb-quick-add-group { margin-bottom: var(--tqb-spacing-sm); }
         .tqb-quick-add-group:last-child { margin-bottom: 0; }
         .tqb-quick-add-label { font-size: var(--tqb-font-xs); color: var(--tqb-text-secondary); margin-bottom: var(--tqb-spacing-xs); display: block; }
         .tqb-quick-add-buttons { display: flex; gap: var(--tqb-spacing-xs); flex-wrap: wrap; }
-        .tqb-quick-btn { background: var(--tqb-bg-tertiary); color: var(--tqb-text-primary); border: 1px solid var(--tqb-border-color); border-radius: var(--tqb-radius-sm); padding: var(--tqb-spacing-sm) var(--tqb-spacing-md); font-size: var(--tqb-font-sm); cursor: pointer; transition: all 0.2s; font-weight: 500; }
+        .tqb-quick-btn { background: var(--tqb-bg-tertiary) !important; color: var(--tqb-text-primary); border: 1px solid var(--tqb-border-color); border-radius: var(--tqb-radius-sm); padding: var(--tqb-spacing-sm) var(--tqb-spacing-md); font-size: var(--tqb-font-sm); cursor: pointer; transition: all 0.2s; font-weight: 500; }
         .tqb-quick-btn:hover { background: var(--tqb-accent-blue); color: white; border-color: var(--tqb-accent-blue); }
         /* Tree */
         .tqb-tree { background: var(--tqb-bg-secondary); border-radius: var(--tqb-radius-md); padding: var(--tqb-spacing-md); margin-bottom: var(--tqb-spacing-md); }
@@ -434,7 +435,7 @@
         .tqb-section-title { color: var(--tqb-accent-blue); margin-top: 0; margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md); }
         .tqb-section-title-spaced { color: var(--tqb-accent-blue); margin-top: var(--tqb-spacing-lg); margin-bottom: var(--tqb-spacing-md); font-size: var(--tqb-font-md); }
         .tqb-setting-label { color: var(--tqb-text-primary); min-width: 200px; }
-        .tqb-setting-toggle-container { display: flex; align-items: center; gap: var(--tqb-spacing-md); min-width: 200px; }
+        .tqb-setting-toggle-container { display: flex; align-items: center; gap: var(--tqb-spacing-md); min-width: 200px; background: unset; }
         .tqb-setting-text { color: var(--tqb-text-secondary); font-size: var(--tqb-font-sm); }
         .tqb-toggle-wrapper { display: inline-flex; align-items: center; cursor: pointer; position: relative; width: 40px; height: 20px; }
         .tqb-toggle-track { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--tqb-bg-tertiary); border-radius: 20px; transition: 0.3s; }
@@ -710,7 +711,7 @@
       '#tqb-preferences', '#tqb-save-favorite', '#tqb-favorites-filter', '#tqb-favorites-list',
       '#tqb-quick-ratings', '#tqb-quick-sorts'
     ]
-    .map(sel => builder.querySelector(sel));
+      .map(sel => builder.querySelector(sel));
 
     // Modal elements
     const [modalCloseBtn, modalFavoritesFilter, modalFavoritesList, favoritesSort,
@@ -718,7 +719,7 @@
     ] = ['#tqb-favorites-modal-close', '#tqb-modal-favorites-filter', '#tqb-modal-favorites-list',
       '#tqb-favorites-sort', '#tqb-export-favorites', '#tqb-import-favorites'
     ]
-    .map(sel => modalOverlay.querySelector(sel));
+      .map(sel => modalOverlay.querySelector(sel));
 
     let tags = [];
 
@@ -770,65 +771,65 @@
     // Meta tags - popular metadata tags
     const quickMetaContainer = document.getElementById('tqb-quick-meta');
     const metaTags = [{
-        tag: 'animated',
-        icon: '🎬',
-        title: 'Animated content'
-      },
-      {
-        tag: 'video',
-        icon: '📹',
-        title: 'Video content'
-      },
-      {
-        tag: 'sound',
-        icon: '🔊',
-        title: 'Has sound/audio'
-      },
-      {
-        tag: 'comic',
-        icon: '📖',
-        title: 'Comic/sequential art'
-      },
-      {
-        tag: 'gif',
-        icon: '🖼️',
-        title: 'GIF format'
-      },
-      {
-        tag: 'transparent_background',
-        icon: '🫥',
-        title: 'Transparent background'
-      },
-      {
-        tag: 'absurd_res',
-        icon: '🖥️',
-        title: 'High resolution (3200x2400+)'
-      },
-      {
-        tag: 'hi_res',
-        icon: '📐',
-        title: 'High res (1600x1200+)'
-      },
-      {
-        tag: 'wallpaper',
-        icon: '🌄',
-        title: 'Wallpaper aspect ratio'
-      },
-      {
-        tag: 'wide_image',
-        icon: '📏',
-        title: 'Wide/panoramic image'
-      },
-      {
-        tag: 'sequence',
-        icon: '🎞️',
-        title: 'Image sequence/series'
-      },
-      {
-        tag: 'loop',
-        icon: '🔁',
-        title: 'Looping animation'
-      }
+      tag: 'animated',
+      icon: '🎬',
+      title: 'Animated content'
+    },
+    {
+      tag: 'video',
+      icon: '📹',
+      title: 'Video content'
+    },
+    {
+      tag: 'sound',
+      icon: '🔊',
+      title: 'Has sound/audio'
+    },
+    {
+      tag: 'comic',
+      icon: '📖',
+      title: 'Comic/sequential art'
+    },
+    {
+      tag: 'gif',
+      icon: '🖼️',
+      title: 'GIF format'
+    },
+    {
+      tag: 'transparent_background',
+      icon: '🫥',
+      title: 'Transparent background'
+    },
+    {
+      tag: 'absurd_res',
+      icon: '🖥️',
+      title: 'High resolution (3200x2400+)'
+    },
+    {
+      tag: 'hi_res',
+      icon: '📐',
+      title: 'High res (1600x1200+)'
+    },
+    {
+      tag: 'wallpaper',
+      icon: '🌄',
+      title: 'Wallpaper aspect ratio'
+    },
+    {
+      tag: 'wide_image',
+      icon: '📏',
+      title: 'Wide/panoramic image'
+    },
+    {
+      tag: 'sequence',
+      icon: '🎞️',
+      title: 'Image sequence/series'
+    },
+    {
+      tag: 'loop',
+      icon: '🔁',
+      title: 'Looping animation'
+    }
     ];
 
     metaTags.forEach(({
@@ -924,15 +925,15 @@
       return createDialog({
         content: `<div class="tqb-dialog-message">${escapeHtml(message)}</div>`,
         buttons: [{
-            text: 'Cancel',
-            className: 'tqb-dialog-btn-secondary',
-            onClick: () => false
-          },
-          {
-            text: 'Confirm',
-            className: 'tqb-dialog-btn-danger',
-            onClick: () => true
-          }
+          text: 'Cancel',
+          className: 'tqb-dialog-btn-secondary',
+          onClick: () => false
+        },
+        {
+          text: 'Confirm',
+          className: 'tqb-dialog-btn-danger',
+          onClick: () => true
+        }
         ],
         onEscape: () => false,
         onOverlayClick: () => false
@@ -949,19 +950,19 @@
           <input type="text" class="tqb-dialog-input" value="${escapeHtml(defaultValue)}">
         `,
         buttons: [{
-            text: 'Cancel',
-            className: 'tqb-dialog-btn-secondary',
-            onClick: () => null
-          },
-          {
-            text: 'OK',
-            className: 'tqb-dialog-btn-primary',
-            onClick: () => {
-              const input = document.querySelector('.tqb-dialog-input');
-              inputValue = input ? input.value : null;
-              return 'ok';
-            }
+          text: 'Cancel',
+          className: 'tqb-dialog-btn-secondary',
+          onClick: () => null
+        },
+        {
+          text: 'OK',
+          className: 'tqb-dialog-btn-primary',
+          onClick: () => {
+            const input = document.querySelector('.tqb-dialog-input');
+            inputValue = input ? input.value : null;
+            return 'ok';
           }
+        }
         ],
         onEscape: () => null,
         onOverlayClick: () => null
@@ -1802,7 +1803,7 @@
             // After removing source, target has moved left by 1
             insertIndex = targetIndex;
           } else {
-            // Item is moving backward (B->A), insert before target  
+            // Item is moving backward (B->A), insert before target
             insertIndex = targetIndex;
           }
 
@@ -1820,7 +1821,7 @@
         // Top-level item
         tags.splice(path[0], 1);
       } else if (path.length === 3 && path[1] === 'items') {
-        // Item in group
+        // Item in OR group
         const groupIndex = path[0];
         const itemIndex = path[2];
         tags[groupIndex].items.splice(itemIndex, 1);

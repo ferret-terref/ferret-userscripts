@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Booru Search Extended
-// @version      2.0
+// @version      2.1
 // @description  Advanced tag builder with tree-based UI and robust parsing - works on multiple booru sites
 // @author       ferret-terref
 // @license      MIT
@@ -16,6 +16,7 @@
 // @match        https://tbib.org/index.php?page=post&s=list*
 // @match        https://xbooru.com/index.php?page=post&s=list*
 // @match        https://realbooru.com/index.php?page=post&s=list*
+// @match        https://booru.allthefallen.moe/posts?*
 // @grant        none
 // ==/UserScript==
 
@@ -77,6 +78,7 @@
         .content { max-width: calc(100% - 320px) !important; }
         .sidebar { min-width: 300px !important; width: 300px !important; }
         .sm-hidden { min-width: 280px !important; }
+        body > #container { grid-template-columns: 350px auto !important; }
       `
     },
     'danbooru.donmai.us': {
@@ -190,6 +192,23 @@
         .tag-search { min-width: 280px !important; }
         .flex_side_items { padding: unset !important; }
       `
+    },
+    'booru.allthefallen.moe': {
+        name: 'AllTheFallen',
+        containerSelector: '#search-box',
+        inputSelector: 'input[name="tags"]',
+        autoCompleteContainer: null,
+        appendToContainer: true,
+        syntax: {
+          orOperator: '~',
+          orGrouping: 'parentheses',
+          notOperator: '-',
+          andOperator: ' ',
+          fuzzyOperator: '~',
+          wildcardSupport: true
+        },
+        ratings: ['safe', 'questionable', 'explicit'],
+        sortOptions: ['score', 'score_asc', 'rank', 'downvotes', 'upvotes']
     }
   };
 
@@ -309,6 +328,7 @@
         .tqb-favorites-list::-webkit-scrollbar-thumb:hover, .tqb-modal::-webkit-scrollbar-thumb:hover { background: var(--tqb-bg-hover) !important; }
         /* Builder */
         .tqb-toggle-btn { background: var(--tqb-bg-primary); color: var(--tqb-text-primary); border: none; border-radius: 6px; padding: 8px 14px; font-size: var(--tqb-font-lg); cursor: pointer; box-shadow: 0 2px 8px #0003; margin: var(--tqb-spacing-lg) 0 8px; display: block; width: 100%; }
+        .tqb-toggle-btn:hover { background: var(--tqb-bg-hover) !important; }
         .tqb-builder { background: var(--tqb-bg-primary); color: var(--tqb-text-primary); padding: var(--tqb-spacing-lg); border-radius: var(--tqb-radius-lg); font-family: system-ui; font-size: var(--tqb-font-md); margin-bottom: var(--tqb-spacing-lg); transition: opacity 0.2s, visibility 0.2s; opacity: 1; visibility: visible; }
         .tqb-builder.tqb-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         /* Buttons */
@@ -711,7 +731,7 @@
       '#tqb-preferences', '#tqb-save-favorite', '#tqb-favorites-filter', '#tqb-favorites-list',
       '#tqb-quick-ratings', '#tqb-quick-sorts'
     ]
-      .map(sel => builder.querySelector(sel));
+    .map(sel => builder.querySelector(sel));
 
     // Modal elements
     const [modalCloseBtn, modalFavoritesFilter, modalFavoritesList, favoritesSort,
@@ -719,7 +739,7 @@
     ] = ['#tqb-favorites-modal-close', '#tqb-modal-favorites-filter', '#tqb-modal-favorites-list',
       '#tqb-favorites-sort', '#tqb-export-favorites', '#tqb-import-favorites'
     ]
-      .map(sel => modalOverlay.querySelector(sel));
+    .map(sel => modalOverlay.querySelector(sel));
 
     let tags = [];
 
@@ -771,65 +791,65 @@
     // Meta tags - popular metadata tags
     const quickMetaContainer = document.getElementById('tqb-quick-meta');
     const metaTags = [{
-      tag: 'animated',
-      icon: '🎬',
-      title: 'Animated content'
-    },
-    {
-      tag: 'video',
-      icon: '📹',
-      title: 'Video content'
-    },
-    {
-      tag: 'sound',
-      icon: '🔊',
-      title: 'Has sound/audio'
-    },
-    {
-      tag: 'comic',
-      icon: '📖',
-      title: 'Comic/sequential art'
-    },
-    {
-      tag: 'gif',
-      icon: '🖼️',
-      title: 'GIF format'
-    },
-    {
-      tag: 'transparent_background',
-      icon: '🫥',
-      title: 'Transparent background'
-    },
-    {
-      tag: 'absurd_res',
-      icon: '🖥️',
-      title: 'High resolution (3200x2400+)'
-    },
-    {
-      tag: 'hi_res',
-      icon: '📐',
-      title: 'High res (1600x1200+)'
-    },
-    {
-      tag: 'wallpaper',
-      icon: '🌄',
-      title: 'Wallpaper aspect ratio'
-    },
-    {
-      tag: 'wide_image',
-      icon: '📏',
-      title: 'Wide/panoramic image'
-    },
-    {
-      tag: 'sequence',
-      icon: '🎞️',
-      title: 'Image sequence/series'
-    },
-    {
-      tag: 'loop',
-      icon: '🔁',
-      title: 'Looping animation'
-    }
+        tag: 'animated',
+        icon: '🎬',
+        title: 'Animated content'
+      },
+      {
+        tag: 'video',
+        icon: '📹',
+        title: 'Video content'
+      },
+      {
+        tag: 'sound',
+        icon: '🔊',
+        title: 'Has sound/audio'
+      },
+      {
+        tag: 'comic',
+        icon: '📖',
+        title: 'Comic/sequential art'
+      },
+      {
+        tag: 'gif',
+        icon: '🖼️',
+        title: 'GIF format'
+      },
+      {
+        tag: 'transparent_background',
+        icon: '🫥',
+        title: 'Transparent background'
+      },
+      {
+        tag: 'absurd_res',
+        icon: '🖥️',
+        title: 'High resolution (3200x2400+)'
+      },
+      {
+        tag: 'hi_res',
+        icon: '📐',
+        title: 'High res (1600x1200+)'
+      },
+      {
+        tag: 'wallpaper',
+        icon: '🌄',
+        title: 'Wallpaper aspect ratio'
+      },
+      {
+        tag: 'wide_image',
+        icon: '📏',
+        title: 'Wide/panoramic image'
+      },
+      {
+        tag: 'sequence',
+        icon: '🎞️',
+        title: 'Image sequence/series'
+      },
+      {
+        tag: 'loop',
+        icon: '🔁',
+        title: 'Looping animation'
+      }
     ];
 
     metaTags.forEach(({
@@ -925,15 +945,15 @@
       return createDialog({
         content: `<div class="tqb-dialog-message">${escapeHtml(message)}</div>`,
         buttons: [{
-          text: 'Cancel',
-          className: 'tqb-dialog-btn-secondary',
-          onClick: () => false
-        },
-        {
-          text: 'Confirm',
-          className: 'tqb-dialog-btn-danger',
-          onClick: () => true
-        }
+            text: 'Cancel',
+            className: 'tqb-dialog-btn-secondary',
+            onClick: () => false
+          },
+          {
+            text: 'Confirm',
+            className: 'tqb-dialog-btn-danger',
+            onClick: () => true
+          }
         ],
         onEscape: () => false,
         onOverlayClick: () => false
@@ -950,19 +970,19 @@
           <input type="text" class="tqb-dialog-input" value="${escapeHtml(defaultValue)}">
         `,
         buttons: [{
-          text: 'Cancel',
-          className: 'tqb-dialog-btn-secondary',
-          onClick: () => null
-        },
-        {
-          text: 'OK',
-          className: 'tqb-dialog-btn-primary',
-          onClick: () => {
-            const input = document.querySelector('.tqb-dialog-input');
-            inputValue = input ? input.value : null;
-            return 'ok';
+            text: 'Cancel',
+            className: 'tqb-dialog-btn-secondary',
+            onClick: () => null
+          },
+          {
+            text: 'OK',
+            className: 'tqb-dialog-btn-primary',
+            onClick: () => {
+              const input = document.querySelector('.tqb-dialog-input');
+              inputValue = input ? input.value : null;
+              return 'ok';
+            }
           }
-        }
         ],
         onEscape: () => null,
         onOverlayClick: () => null

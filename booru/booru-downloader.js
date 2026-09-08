@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Booru Downloader
-// @version      2.2
+// @version      2.3
 // @description  Press Ctrl+S on an image page to save it with configurable download modes
 // @author       ferret-terref
 // @license      MIT
@@ -168,7 +168,22 @@
     },
     'danbooru.donmai.us': {
       name: 'Danbooru',
-      downloadXPath: "//a[contains(., 'Download')]"
+      downloadXPath: "//a[contains(., 'Download')]",
+      danbooruSpecificGetter: async function () {
+        const url = window.location.href.split('?')[0];
+        const apiUrl = `${url}.json`;
+
+        const res = await fetch(apiUrl, {
+          headers: {
+            "User-Agent": "Snitch/1.0 (user #1318023)",
+            "Accept": "application/json"
+          }
+        });
+
+        const json = await res.json();
+
+        return json.file_url;
+      }
     },
     'e621.net': {
       name: 'E621',
@@ -417,7 +432,7 @@
         try {
           showToast('Sent to Snitch!', 'info', 3000);
           if (window.location.hostname == 'danbooru.donmai.us') {
-            snitchUrl = snitchUrl.replace('/api/v2/download', '/api/stash/update?scan_first=true');
+            _link = await this.config.danbooruSpecificGetter?.() ?? _link;
           }
 
           const page_url = this.strategy?.getPageUrl?.() || window.location.href;
@@ -688,7 +703,7 @@
   }
 
   function getSnitchUrl() {
-    return localStorage.getItem(SNITCH_URL_KEY) || 'http://localhost:9998/api/download';
+    return localStorage.getItem(SNITCH_URL_KEY) || 'http://localhost:8888/api/v2/download';
   }
 
   function setSnitchUrl(url) {

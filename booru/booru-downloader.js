@@ -5,8 +5,8 @@
 // @author       ferret-terref
 // @license      MIT
 // @homepageURL  https://github.com/ferret-terref/ferret-userscripts
-// @updateURL    https://github.com/ferret-terref/ferret-userscripts/raw/refs/heads/main/booru/booru-downloader.js
-// @downloadURL  https://github.com/ferret-terref/ferret-userscripts/raw/refs/heads/main/booru/booru-downloader.js
+// @updateURL    https://raw.githubusercontent.com/ferret-terref/ferret-userscripts/refs/heads/main/booru/booru-downloader.js
+// @downloadURL  https://raw.githubusercontent.com/ferret-terref/ferret-userscripts/refs/heads/main/booru/booru-downloader.js
 // @match        https://rule34.xxx/index.php?page=post*
 // @match        https://danbooru.donmai.us/posts/*?q=*
 // @match        https://danbooru.donmai.us/posts/*
